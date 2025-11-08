@@ -53,6 +53,9 @@ export class DetectorService {
   private readonly FALL_FRAME_THRESHOLD = 3; // Require 3 consecutive frames to confirm fall
   private currentCanvas: HTMLCanvasElement | null = null;
   private currentVideo: HTMLVideoElement | null = null;
+  private noDetectionStartTime: number | null = null;
+  private readonly NO_DETECTION_TIMEOUT = 10000; // 10 seconds
+  private noDetectionInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.poseDetector = new PoseDetector();
@@ -74,8 +77,13 @@ export class DetectorService {
     const results = await this.poseDetector.detectPose(video);
 
     if (!results || !results.landmarks || results.landmarks.length === 0) {
+      // No person detected - start countdown if not already started
+      this.handleNoDetection();
       return null;
     }
+
+    // Person detected - stop countdown if running
+    this.stopNoDetectionCountdown();
 
     const landmarks = results.landmarks[0];
 
@@ -292,7 +300,102 @@ export class DetectorService {
     return this.motionMonitor.getTimeRemaining();
   }
 
+  private handleNoDetection(): void {
+    if (this.noDetectionStartTime === null) {
+      // Start the countdown
+      this.noDetectionStartTime = Date.now();
+      this.startNoDetectionCountdown();
+    }
+  }
+
+  private startNoDetectionCountdown(): void {
+    if (this.noDetectionInterval) {
+      return; // Already running
+    }
+
+    this.noDetectionInterval = setInterval(() => {
+      if (this.noDetectionStartTime === null) {
+        this.stopNoDetectionCountdown();
+        return;
+      }
+
+      const elapsed = Date.now() - this.noDetectionStartTime;
+      const remaining = Math.max(0, this.NO_DETECTION_TIMEOUT - elapsed);
+      const timeRemaining = Math.ceil(remaining / 1000);
+
+      this.emit({
+        type: "motion_check_update",
+        state: this.state,
+        data: {
+          timeRemaining,
+          isComplete: remaining === 0,
+          shouldTriggerAlert: remaining === 0,
+        },
+      });
+
+      if (remaining === 0) {
+        this.stopNoDetectionCountdown();
+        this.triggerNoDetectionAlert();
+      }
+    }, 100);
+  }
+
+  private stopNoDetectionCountdown(): void {
+    if (this.noDetectionInterval) {
+      clearInterval(this.noDetectionInterval);
+      this.noDetectionInterval = null;
+    }
+    if (this.noDetectionStartTime !== null) {
+      this.noDetectionStartTime = null;
+      // Emit update to show monitoring state
+      this.emit({
+        type: "motion_check_update",
+        state: this.state,
+        data: {
+          timeRemaining: null,
+          isComplete: false,
+          shouldTriggerAlert: false,
+        },
+      });
+    }
+  }
+
+  private async triggerNoDetectionAlert(): Promise<void> {
+    const gpsCoordinates = await this.captureGPSLocation();
+
+    const alert: FallAlert = {
+      timestamp: new Date(),
+      confidence: 0.95,
+      type: "fall",
+      keypointMetrics: {
+        verticalVelocity: 0,
+        bodyAngle: 0,
+        aspectRatio: 0,
+        headToHipDistance: 0,
+      },
+      motionWindow: {
+        startTime: new Date(Date.now() - 10000).toISOString(),
+        endTime: new Date().toISOString(),
+        movementDetected: false,
+        avgMovement: 0,
+      },
+      gpsCoordinates,
+    };
+
+    this.emit({
+      type: "motion_check_update",
+      state: this.state,
+      data: {
+        timeRemaining: 0,
+        isComplete: true,
+        shouldTriggerAlert: true,
+        fallAlert: alert,
+      },
+    });
+  }
+
   destroy(): void {
+    this.stopNoDetectionCountdown();
     this.poseDetector.destroy();
     this.listeners = [];
   }

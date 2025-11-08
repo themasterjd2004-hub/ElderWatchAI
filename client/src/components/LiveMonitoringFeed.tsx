@@ -60,11 +60,13 @@ export default function LiveMonitoringFeed({
           }
 
           if (event.type === "motion_check_update") {
-            const timeRemaining = Math.ceil(event.data?.timeRemaining || 0);
-            setCountdown(timeRemaining);
+            const timeRemaining = event.data?.timeRemaining;
+            // Preserve null when person reappears, otherwise ceil the countdown value
+            const countdownValue = timeRemaining === null || timeRemaining === undefined ? null : Math.ceil(timeRemaining);
+            setCountdown(countdownValue);
             
             // Trigger dialog when countdown reaches 0
-            if (timeRemaining === 0 && !autoDispatchTriggered.current) {
+            if (countdownValue === 0 && !autoDispatchTriggered.current) {
               autoDispatchTriggered.current = true;
               handleShowConfirmation(event.data?.fallAlert || currentFallAlert);
             }
@@ -268,6 +270,19 @@ export default function LiveMonitoringFeed({
   const getStateBadge = () => {
     const status = getMonitoringStatus();
     
+    // Check for countdown first (no detection or motion check)
+    if (countdown !== null && countdown >= 0) {
+      return (
+        <Badge className="bg-black/80 text-base px-4 py-2 border border-destructive">
+          <span className="h-2 w-2 rounded-full bg-destructive mr-2 animate-pulse" />
+          <div className="flex items-center gap-3">
+            <span className="text-destructive font-bold text-2xl tabular-nums">{Math.ceil(countdown)}</span>
+            <span className="text-destructive">No movement found.</span>
+          </div>
+        </Badge>
+      );
+    }
+
     switch (detectorState) {
       case "monitoring":
         return (
