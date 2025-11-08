@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Fall Event Routes ===
-  app.post("/api/fall-events", isAuthenticated, async (req, res) => {
+  app.post("/api/fall-events", isAuthenticatedTraditional, async (req, res) => {
     try {
       const data = insertFallEventSchema.parse(req.body);
       const fallEvent = await storage.createFallEvent(data);
@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/fall-events/:parentId", isAuthenticated, async (req, res) => {
+  app.get("/api/fall-events/:parentId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       const events = await storage.getFallEventsByParentId(req.params.parentId, limit);
@@ -193,9 +193,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/fall-events/:id/acknowledge", isAuthenticated, async (req, res) => {
+  app.post("/api/fall-events/:id/acknowledge", isAuthenticatedTraditional, async (req, res) => {
     try {
-      const userId = (req as any).user?.claims?.sub;
+      const userId = (req.session as any)?.userId;
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/fall-events/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/fall-events/:id", isAuthenticatedTraditional, async (req, res) => {
     try {
       const updateSchema = z.object({
         status: z.enum(["pending", "acknowledged", "false_alarm", "dispatched", "resolved"]).optional(),
@@ -249,7 +249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Alert Routes ===
-  app.post("/api/alerts", isAuthenticated, async (req, res) => {
+  app.post("/api/alerts", isAuthenticatedTraditional, async (req, res) => {
     try {
       const data = insertAlertSchema.parse(req.body);
       const alert = await storage.createAlert(data);
@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/alerts/:userId", isAuthenticated, async (req, res) => {
+  app.get("/api/alerts/:userId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const alerts = await storage.getAlertsByUserId(req.params.userId);
       res.json(alerts);
@@ -273,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/alerts/:id/read", isAuthenticated, async (req, res) => {
+  app.post("/api/alerts/:id/read", isAuthenticatedTraditional, async (req, res) => {
     try {
       const alert = await storage.markAlertAsRead(req.params.id);
       if (!alert) {
@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Hospital Routes ===
-  app.get("/api/hospitals", isAuthenticated, async (req, res) => {
+  app.get("/api/hospitals", isAuthenticatedTraditional, async (req, res) => {
     try {
       const hospitals = await storage.getAllHospitals();
       res.json(hospitals);
@@ -297,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/hospitals/nearest", isAuthenticated, async (req, res) => {
+  app.get("/api/hospitals/nearest", isAuthenticatedTraditional, async (req, res) => {
     try {
       const { lat, lng } = req.query;
       if (!lat || !lng) {
@@ -315,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/hospitals/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/hospitals/:id", isAuthenticatedTraditional, async (req, res) => {
     try {
       const hospital = await storage.getHospital(req.params.id);
       if (!hospital) {
@@ -328,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/hospitals", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/hospitals", isAuthenticatedTraditional, isAdmin, async (req, res) => {
     try {
       const data = insertHospitalSchema.parse(req.body);
       const hospital = await storage.createHospital(data);
@@ -342,7 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/hospitals/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.patch("/api/hospitals/:id", isAuthenticatedTraditional, isAdmin, async (req, res) => {
     try {
       const updateSchema = z.object({
         name: z.string().optional(),
@@ -370,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/hospitals/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/hospitals/:id", isAuthenticatedTraditional, isAdmin, async (req, res) => {
     try {
       const hospital = await storage.getHospital(req.params.id);
       if (!hospital) {
@@ -385,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Ambulance Routes ===
-  app.get("/api/ambulances/hospital/:hospitalId", isAuthenticated, async (req, res) => {
+  app.get("/api/ambulances/hospital/:hospitalId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const ambulances = await storage.getAmbulancesByHospitalId(req.params.hospitalId);
       res.json(ambulances);
@@ -395,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/ambulances/fall-event/:fallEventId", isAuthenticated, async (req, res) => {
+  app.get("/api/ambulances/fall-event/:fallEventId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const ambulance = await storage.getAmbulanceByFallEventId(req.params.fallEventId);
       if (!ambulance) {
@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/ambulances/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/ambulances/:id", isAuthenticatedTraditional, async (req, res) => {
     try {
       const ambulance = await storage.getAmbulance(req.params.id);
       if (!ambulance) {
@@ -421,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ambulances", isAuthenticated, isAdmin, async (req, res) => {
+  app.post("/api/ambulances", isAuthenticatedTraditional, isAdmin, async (req, res) => {
     try {
       const data = insertAmbulanceSchema.parse(req.body);
       const ambulance = await storage.createAmbulance(data);
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ambulances/dispatch", isAuthenticated, async (req, res) => {
+  app.post("/api/ambulances/dispatch", isAuthenticatedTraditional, async (req, res) => {
     try {
       const dispatchSchema = z.object({
         ambulanceId: z.string(),
@@ -466,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/ambulances/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/ambulances/:id", isAuthenticatedTraditional, async (req, res) => {
     try {
       const updateSchema = z.object({
         status: z.enum(["available", "dispatched", "en_route", "arrived", "completed"]).optional(),
@@ -498,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/ambulances/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/ambulances/:id", isAuthenticatedTraditional, isAdmin, async (req, res) => {
     try {
       const ambulance = await storage.getAmbulance(req.params.id);
       if (!ambulance) {
@@ -513,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Vitals Routes ===
-  app.post("/api/vitals", isAuthenticated, async (req, res) => {
+  app.post("/api/vitals", isAuthenticatedTraditional, async (req, res) => {
     try {
       const data = insertVitalsLogSchema.parse(req.body);
       const vitals = await storage.createVitalsLog(data);
@@ -534,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/vitals/latest/:parentId", isAuthenticated, async (req, res) => {
+  app.get("/api/vitals/latest/:parentId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const vitals = await storage.getLatestVitals(req.params.parentId);
       res.json(vitals || null);
@@ -544,7 +544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/vitals/:parentId", isAuthenticated, async (req, res) => {
+  app.get("/api/vitals/:parentId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
       const vitals = await storage.getVitalsByParentId(req.params.parentId, limit);
@@ -555,7 +555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/vitals/:id", isAuthenticated, isAdmin, async (req, res) => {
+  app.delete("/api/vitals/:id", isAuthenticatedTraditional, isAdmin, async (req, res) => {
     try {
       // Note: Delete implementation requires adding deleteVitalsLog to storage interface
       res.status(501).json({ error: "Delete operation not yet implemented" });
@@ -566,7 +566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Monitoring Session Routes ===
-  app.post("/api/monitoring/start", isAuthenticated, async (req, res) => {
+  app.post("/api/monitoring/start", isAuthenticatedTraditional, async (req, res) => {
     try {
       const { parentId } = req.body;
       if (!parentId) {
@@ -587,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/monitoring/:id/end", isAuthenticated, async (req, res) => {
+  app.post("/api/monitoring/:id/end", isAuthenticatedTraditional, async (req, res) => {
     try {
       const session = await storage.endMonitoringSession(req.params.id);
       if (!session) {

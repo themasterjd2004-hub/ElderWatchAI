@@ -96,14 +96,25 @@ Preferred communication style: Simple, everyday language.
 - Session-based authentication with bcrypt password hashing
 - Case-insensitive email matching (users can login with any casing)
 - Login page appears immediately when app is opened
-- All routes protected via ProtectedRoute component
+- All routes protected via ProtectedRoute component on frontend
+- All API routes protected via isAuthenticatedTraditional middleware on backend
 - User-to-parent relationship mapping
 
 **Technical Details**:
-- Express session middleware with PostgreSQL session store
+- Express session middleware with PostgreSQL session store (connect-pg-simple)
 - Passwords stored using bcrypt with 10 salt rounds
 - Email lookup uses case-insensitive SQL comparison: `LOWER(email)`
 - Session persists across page refreshes
+- Secure HTTPS-only cookies (secure: true) for production
+- Session TTL: 7 days
+- All backend routes use `isAuthenticatedTraditional` middleware (switched from Replit auth)
+- Session userId stored in req.session.userId
+
+**API Route Protection**:
+- All `/api/parents/*`, `/api/fall-events/*`, `/api/alerts/*` routes require authentication
+- All `/api/hospitals/*`, `/api/ambulances/*`, `/api/vitals/*` routes require authentication  
+- All `/api/monitoring/*` routes require authentication
+- Admin routes (`isAdmin` middleware) require user.role === "admin"
 
 **Future Extension Points**: 
 - Role-based access (family member vs. caregiver)
