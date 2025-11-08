@@ -13,6 +13,7 @@ import {
 import { z } from "zod";
 import { seedDemoData } from "./demo-data";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { signup, signin, signout, isAuthenticatedTraditional } from "./traditionalAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -49,8 +50,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Store io instance for use in routes
   (app as any).io = io;
 
-  // === Auth Routes ===
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // === Traditional Auth Routes ===
+  app.post('/api/auth/signup', signup);
+  app.post('/api/auth/signin', signin);
+  app.post('/api/auth/signout', signout);
+  
+  app.get('/api/auth/user', isAuthenticatedTraditional, async (req: any, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        console.error(`User not found in storage: ${userId}`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // === Replit Auth Routes ===
+  app.get('/api/replit/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -91,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === Parent Routes ===
-  app.post("/api/parents", isAuthenticated, async (req, res) => {
+  app.post("/api/parents", isAuthenticatedTraditional, async (req, res) => {
     try {
       const data = insertParentSchema.parse(req.body);
       const parent = await storage.createParent(data);
@@ -105,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/parents/:userId", isAuthenticated, async (req, res) => {
+  app.get("/api/parents/:userId", isAuthenticatedTraditional, async (req, res) => {
     try {
       const parents = await storage.getParentsByUserId(req.params.userId);
       res.json(parents);
@@ -115,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/parents/:id", isAuthenticated, async (req, res) => {
+  app.patch("/api/parents/:id", isAuthenticatedTraditional, async (req, res) => {
     try {
       const updates = insertParentSchema.partial().parse(req.body);
       const parent = await storage.updateParent(req.params.id, updates);

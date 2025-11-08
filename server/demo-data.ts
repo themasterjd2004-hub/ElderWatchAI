@@ -1,19 +1,40 @@
 import { storage } from "./storage";
+import { hashPassword } from "./traditionalAuth";
 
 export async function seedDemoData() {
   try {
     // Check if demo user exists
-    let demoUser = await storage.getUserByUsername("demo");
+    let demoUser = await storage.getUserByEmail("demo@example.com");
     
     if (!demoUser) {
-      // Create demo user
+      // Create demo user with hashed password
+      const hashedPassword = await hashPassword("demo123");
       demoUser = await storage.createUser({
-        username: "demo",
-        password: "demo123",
         email: "demo@example.com",
+        password: hashedPassword,
+        firstName: "Demo",
+        lastName: "User",
         phone: "(555) 234-5678",
+        role: "user",
       });
       console.log("✅ Demo user created:", demoUser.id);
+    }
+
+    // Check if requested user exists
+    let requestedUser = await storage.getUserByEmail("shreyassmysuru@gmail.com");
+    
+    if (!requestedUser) {
+      // Create requested user with hashed password
+      const hashedPassword = await hashPassword("shreyas123");
+      requestedUser = await storage.createUser({
+        email: "shreyassmysuru@gmail.com",
+        password: hashedPassword,
+        firstName: "Shreyas",
+        lastName: "S",
+        phone: "",
+        role: "user",
+      });
+      console.log("✅ Requested user created:", requestedUser.id);
     }
 
     // Check if demo parent exists
