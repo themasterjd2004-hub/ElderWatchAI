@@ -10,8 +10,12 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Video, History, Settings, Shield, User } from "lucide-react";
+import { LayoutDashboard, Video, History, Settings, Shield, User, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const menuItems = [
   {
@@ -43,6 +47,25 @@ const menuItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { toast } = useToast();
+
+  const signOutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/auth/signout");
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.clear();
+      window.location.href = "/signin";
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <Sidebar>
@@ -76,16 +99,27 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4">
+      <SidebarFooter className="p-4 space-y-2">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
             <User className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">John Smith</p>
-            <p className="text-xs text-muted-foreground truncate">john@example.com</p>
+            <p className="text-sm font-medium truncate">User Account</p>
+            <p className="text-xs text-muted-foreground truncate">Authorized</p>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => signOutMutation.mutate()}
+          disabled={signOutMutation.isPending}
+          data-testid="button-signout"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          {signOutMutation.isPending ? "Signing out..." : "Sign Out"}
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
