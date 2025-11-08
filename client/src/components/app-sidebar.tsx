@@ -20,8 +20,8 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Monitoring",
-    url: "/monitoring",
+    title: "Live Detection",
+    url: "/live-monitoring",
     icon: Video,
   },
   {

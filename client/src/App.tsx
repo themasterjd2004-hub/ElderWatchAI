@@ -9,18 +9,29 @@ import ThemeToggle from "@/components/ThemeToggle";
 import EmergencyButton from "@/components/EmergencyButton";
 import Dashboard from "@/pages/Dashboard";
 import Monitoring from "@/pages/Monitoring";
+import LiveMonitoring from "@/pages/LiveMonitoring";
 import History from "@/pages/History";
 import Privacy from "@/pages/Privacy";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EmergencyDispatchModal from "@/components/EmergencyDispatchModal";
+import { getDemoIds } from "@/lib/demoIds";
 
 function Router() {
+  const [userId, setUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    getDemoIds().then(({ userId }) => {
+      setUserId(userId);
+    });
+  }, []);
+
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/monitoring" component={Monitoring} />
+      <Route path="/live-monitoring" component={LiveMonitoring} />
       <Route path="/history" component={History} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/settings" component={Settings} />
