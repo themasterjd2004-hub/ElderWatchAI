@@ -161,16 +161,18 @@ export default function LiveMonitoringFeed({
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw video or skeletal overlay
-        if (!privacyMode) {
-          // Show video feed with semi-transparent skeletal overlay on top
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          if (results) {
-            detectorRef.current.drawLandmarks(ctx, results);
+        // Always draw skeletal overlay when person detected
+        if (results && results.landmarks && results.landmarks.length > 0) {
+          // First draw video if not in privacy mode
+          if (!privacyMode) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           }
-        } else if (results) {
-          // Show only skeletal overlay (privacy mode)
+          
+          // Then draw color-coded skeletal overlay on top
           detectorRef.current.drawLandmarks(ctx, results);
+        } else if (!privacyMode) {
+          // No person detected, just show video
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
       } catch (error) {
         console.error("Error processing frame:", error);

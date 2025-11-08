@@ -37,7 +37,7 @@ export const fallEvents = pgTable("fall_events", {
   confidence: real("confidence").notNull(), // 0-100
   status: text("status").notNull().default("pending"), // 'pending', 'acknowledged', 'false_alarm', 'dispatched', 'resolved'
   location: text("location"),
-  gpsCoordinates: jsonb("gps_coordinates").$type<{ lat: number; lng: number }>(),
+  gpsCoordinates: jsonb("gps_coordinates").$type<{ lat: number; lng: number; accuracy?: number }>(),
   snapshot: text("snapshot"),
   vitals: jsonb("vitals").$type<{
     heartRate?: number;

@@ -45,19 +45,13 @@ export class PoseDetector {
       throw new Error("Pose detector not initialized. Call initialize() first.");
     }
 
-    // Skip if same video frame
-    if (this.lastVideoTime === video.currentTime) {
-      return null;
-    }
-
-    this.lastVideoTime = video.currentTime;
-
     try {
-      const nowInMs = Date.now();
-      const results = await this.poseLandmarker.detectForVideo(video, nowInMs);
+      // Use performance.now() for monotonic timestamps
+      const timestamp = performance.now();
+      const results = this.poseLandmarker.detectForVideo(video, timestamp);
       return results;
     } catch (error) {
-      console.error("Error detecting pose:", error);
+      // Silently ignore timestamp errors (they're common when processing frames)
       return null;
     }
   }

@@ -17,9 +17,9 @@ export interface FallAlert {
   type: "fall";
   location?: string;
   gpsCoordinates?: {
-    latitude: number;
-    longitude: number;
-    accuracy: number;
+    lat: number;
+    lng: number;
+    accuracy?: number;
   };
   vitals?: {
     heartRate?: number;
@@ -207,7 +207,7 @@ export class DetectorService {
     }
   }
 
-  private async captureGPSLocation(): Promise<{ latitude: number; longitude: number; accuracy: number } | undefined> {
+  private async captureGPSLocation(): Promise<{ lat: number; lng: number; accuracy?: number } | undefined> {
     if (!("geolocation" in navigator)) {
       console.log("GPS not available in this browser");
       return undefined;
@@ -217,8 +217,8 @@ export class DetectorService {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const coords = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
             accuracy: position.coords.accuracy,
           };
           console.log("GPS coordinates captured:", coords);
@@ -270,13 +270,8 @@ export class DetectorService {
   }
 
   drawLandmarks(canvasCtx: CanvasRenderingContext2D, results: PoseLandmarkerResult): void {
-    if (results.landmarks && results.landmarks.length > 0) {
-      // Import PoseLandmarker for connections
-      this.poseDetector.drawLandmarks(
-        canvasCtx,
-        results.landmarks[0],
-        (window as any).MPTasks?.vision?.PoseLandmarker?.POSE_CONNECTIONS
-      );
+    if (results && results.landmarks && results.landmarks.length > 0) {
+      this.poseDetector.drawLandmarks(canvasCtx, results);
     }
   }
 
