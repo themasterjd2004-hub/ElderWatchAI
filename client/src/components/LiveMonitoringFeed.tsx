@@ -5,6 +5,9 @@ import { Camera, Mic, MicOff, Settings, Eye, EyeOff, AlertTriangle } from "lucid
 import { useState, useRef, useEffect } from "react";
 import { DetectorService, DetectorState, DetectorEvent, FallAlert } from "@/modules/fall-detection";
 import { PoseLandmarker } from "@mediapipe/tasks-vision";
+import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface LiveMonitoringFeedProps {
   parentId?: string;
@@ -27,8 +30,12 @@ export default function LiveMonitoringFeed({
   const [detectorState, setDetectorState] = useState<DetectorState>("idle");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [fallConfidence, setFallConfidence] = useState<number | null>(null);
+  const [currentFallAlert, setCurrentFallAlert] = useState<FallAlert | null>(null);
   const detectorRef = useRef<DetectorService | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const autoDispatchTriggered = useRef(false);
 
   useEffect(() => {
     let detector: DetectorService | null = null;
@@ -48,21 +55,33 @@ export default function LiveMonitoringFeed({
 
           if (event.type === "fall_detected") {
             setFallConfidence(event.data?.confidence || 0);
+            setCurrentFallAlert(event.data as FallAlert);
+            autoDispatchTriggered.current = false;
           }
 
           if (event.type === "motion_check_update") {
-            setCountdown(Math.ceil(event.data?.timeRemaining || 0));
+            const timeRemaining = Math.ceil(event.data?.timeRemaining || 0);
+            setCountdown(timeRemaining);
+            
+            // Auto-dispatch when countdown reaches 0
+            if (timeRemaining === 0 && !autoDispatchTriggered.current) {
+              autoDispatchTriggered.current = true;
+              handleAutoDispatch(event.data?.fallAlert || currentFallAlert);
+            }
           }
 
           if (event.type === "alert_triggered") {
             onFallDetected?.(event.data as FallAlert);
             setCountdown(null);
             setFallConfidence(null);
+            setCurrentFallAlert(null);
           }
 
           if (event.type === "false_alarm") {
             setCountdown(null);
             setFallConfidence(null);
+            setCurrentFallAlert(null);
+            autoDispatchTriggered.current = false;
           }
         });
 
@@ -184,6 +203,78 @@ export default function LiveMonitoringFeed({
     detectFrame();
   };
 
+  const handleAutoDispatch = async (alert: FallAlert | null) => {
+    if (!alert) return;
+
+    try {
+      // Get destination from fall alert
+      const destination = alert.gpsCoordinates || { lat: 12.9716, lng: 77.5946 };
+
+      // Step 1: Find nearest hospital using Haversine formula
+      const hospitalsRes = await apiRequest(
+        "GET", 
+        `/api/hospitals/nearest?lat=${destination.lat}&lng=${destination.lng}&limit=1`
+      );
+      const hospitals = await hospitalsRes.json();
+      
+      if (!hospitals || hospitals.length === 0) {
+        toast({
+          title: "Error",
+          description: "No hospitals found nearby",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const hospital = hospitals[0];
+
+      // Step 2: Find available ambulance from that hospital
+      const ambulancesRes = await apiRequest("GET", `/api/ambulances/hospital/${hospital.id}`);
+      const ambulances = await ambulancesRes.json();
+      const availableAmbulance = ambulances.find((a: any) => a.status === "available");
+
+      if (!availableAmbulance) {
+        toast({
+          title: "Error",
+          description: "No ambulances available at nearest hospital",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Step 3: Dispatch ambulance
+      const dispatchedRes = await apiRequest("POST", "/api/ambulances/dispatch", {
+        ambulanceId: availableAmbulance.id,
+        fallEventId: alert.timestamp.toString(),
+        destination: destination,
+      });
+      const dispatched = await dispatchedRes.json();
+
+      // Reset states
+      setCountdown(null);
+      setFallConfidence(null);
+      setCurrentFallAlert(null);
+
+      // Navigate to dashboard with dispatch info
+      toast({
+        title: "Emergency Dispatched",
+        description: `Ambulance ${dispatched.vehicleNumber} dispatched from ${hospital.name}`,
+      });
+
+      // Redirect to dashboard
+      setTimeout(() => {
+        setLocation("/");
+      }, 1500);
+    } catch (error: any) {
+      console.error("Auto-dispatch failed:", error);
+      toast({
+        title: "Dispatch Failed",
+        description: error.message || "Failed to dispatch emergency services",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStateBadge = () => {
     switch (detectorState) {
       case "monitoring":
@@ -225,6 +316,36 @@ export default function LiveMonitoringFeed({
   return (
     <Card className="overflow-hidden" data-testid="card-monitoring-feed">
       <div className="relative aspect-video bg-black">
+        {/* Prominent countdown overlay - shown above the recording area when patient not visible */}
+        {detectorState === "motion_check" && countdown !== null && countdown > 0 && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="text-center space-y-4 p-8">
+              <AlertTriangle className="h-16 w-16 text-destructive mx-auto animate-pulse" />
+              <div>
+                <h2 className="text-4xl font-bold text-white mb-2">Patient Not Visible</h2>
+                <p className="text-lg text-white/80">No motion detected after fall</p>
+              </div>
+              <div className="relative">
+                <div className="text-8xl font-bold text-destructive tabular-nums">
+                  {countdown}
+                </div>
+                <div className="text-lg text-white/80 mt-2">seconds until auto-dispatch</div>
+              </div>
+              <div className="w-full max-w-md mx-auto">
+                <div className="w-full bg-white/20 rounded-full h-3">
+                  <div
+                    className="bg-destructive h-3 rounded-full transition-all duration-1000"
+                    style={{ width: `${((10 - countdown) / 10) * 100}%` }}
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-white/60 max-w-md">
+                Emergency services will be automatically dispatched if no movement is detected
+              </p>
+            </div>
+          </div>
+        )}
+
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
