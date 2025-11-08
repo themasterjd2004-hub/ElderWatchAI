@@ -24,7 +24,7 @@ export async function seedDemoData() {
         lastName: "Kuruvilla",
       },
       {
-        email: "shreyassmysuru@gmail.com",
+        email: "Shreyassmysuru@gmail.com",
         password: "shreyas@123",
         firstName: "Shreyas",
         lastName: "S",
