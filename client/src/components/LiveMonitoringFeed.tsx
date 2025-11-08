@@ -131,6 +131,11 @@ export default function LiveMonitoringFeed({
       return;
     }
 
+    // Pass video and canvas references to detector for snapshot capture
+    if (videoRef.current && canvasRef.current) {
+      detectorRef.current.setVideoCanvas(videoRef.current, canvasRef.current);
+    }
+
     const detectFrame = async () => {
       if (!videoRef.current || !canvasRef.current || !detectorRef.current || !isInitialized) {
         return;
@@ -156,12 +161,16 @@ export default function LiveMonitoringFeed({
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw skeletal overlay
-        if (privacyMode && results) {
-          detectorRef.current.drawLandmarks(ctx, results);
-        } else if (!privacyMode) {
-          // Show video feed
+        // Draw video or skeletal overlay
+        if (!privacyMode) {
+          // Show video feed with semi-transparent skeletal overlay on top
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          if (results) {
+            detectorRef.current.drawLandmarks(ctx, results);
+          }
+        } else if (results) {
+          // Show only skeletal overlay (privacy mode)
+          detectorRef.current.drawLandmarks(ctx, results);
         }
       } catch (error) {
         console.error("Error processing frame:", error);

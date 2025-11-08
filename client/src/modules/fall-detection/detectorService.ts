@@ -16,6 +16,11 @@ export interface FallAlert {
   confidence: number;
   type: "fall";
   location?: string;
+  gpsCoordinates?: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+  };
   vitals?: {
     heartRate?: number;
     breathing?: number;
@@ -33,6 +38,7 @@ export interface FallAlert {
     movementDetected: boolean;
     avgMovement: number;
   };
+  snapshot?: string; // Base64 encoded image of skeletal overlay at fall moment
 }
 
 export class DetectorService {
@@ -45,11 +51,18 @@ export class DetectorService {
   private fallAnalysis: FallAnalysis | null = null;
   private consecutiveFallFrames = 0;
   private readonly FALL_FRAME_THRESHOLD = 3; // Require 3 consecutive frames to confirm fall
+  private currentCanvas: HTMLCanvasElement | null = null;
+  private currentVideo: HTMLVideoElement | null = null;
 
   constructor() {
     this.poseDetector = new PoseDetector();
     this.fallHeuristics = new FallHeuristics();
     this.motionMonitor = new MotionMonitor();
+  }
+
+  setVideoCanvas(video: HTMLVideoElement, canvas: HTMLCanvasElement): void {
+    this.currentVideo = video;
+    this.currentCanvas = canvas;
   }
 
   async initialize(): Promise<void> {
@@ -131,8 +144,14 @@ export class DetectorService {
     }
   }
 
-  private triggerAlert(motionResult: MotionCheckResult): void {
+  private async triggerAlert(motionResult: MotionCheckResult): Promise<void> {
     this.setState("alert_triggered");
+
+    // Capture snapshot of skeletal overlay
+    const snapshot = this.captureSnapshot();
+
+    // Attempt to get GPS coordinates
+    const gpsCoordinates = await this.captureGPSLocation();
 
     const alert: FallAlert = {
       timestamp: new Date(),
@@ -150,6 +169,8 @@ export class DetectorService {
         movementDetected: motionResult.movementDetected,
         avgMovement: motionResult.avgMovement,
       },
+      snapshot,
+      gpsCoordinates,
     };
 
     this.emit({
@@ -158,12 +179,61 @@ export class DetectorService {
       data: alert,
     });
 
-    console.log("🚨 FALL ALERT TRIGGERED:", alert);
+    console.log("FALL ALERT TRIGGERED with snapshot and GPS:", {
+      ...alert,
+      snapshot: snapshot ? "Captured" : "Not available",
+    });
 
     // Reset to monitoring after a delay
     setTimeout(() => {
       this.reset();
     }, 5000);
+  }
+
+  private captureSnapshot(): string | undefined {
+    if (!this.currentCanvas) {
+      console.warn("Cannot capture snapshot - canvas not set");
+      return undefined;
+    }
+
+    try {
+      // Capture current canvas as base64 image (skeletal overlay)
+      const dataUrl = this.currentCanvas.toDataURL("image/png");
+      console.log("Snapshot captured:", dataUrl.substring(0, 50) + "...");
+      return dataUrl;
+    } catch (error) {
+      console.error("Failed to capture snapshot:", error);
+      return undefined;
+    }
+  }
+
+  private async captureGPSLocation(): Promise<{ latitude: number; longitude: number; accuracy: number } | undefined> {
+    if (!("geolocation" in navigator)) {
+      console.log("GPS not available in this browser");
+      return undefined;
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coords = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          };
+          console.log("GPS coordinates captured:", coords);
+          resolve(coords);
+        },
+        (error) => {
+          console.warn("Could not get GPS location:", error.message);
+          resolve(undefined);
+        },
+        {
+          timeout: 3000, // 3 second timeout
+          enableHighAccuracy: true,
+        }
+      );
+    });
   }
 
   private handleFalseAlarm(): void {
