@@ -4,6 +4,15 @@
 
 An AI-powered elder safety monitoring platform that provides real-time fall detection, emergency response coordination, and family alerts. The system uses computer vision with pose estimation to monitor elderly individuals while maintaining privacy through skeletal tracking mode. It includes automated emergency dispatch integration with hospitals, real-time vital monitoring, and comprehensive incident management.
 
+## Recent Changes
+
+- **ParentStatusCard Actions** (Nov 8, 2025): All three buttons now functional
+  - "Call Parent" button shows "Ringing..." state with toast notification
+  - "View Camera" button navigates to Live Monitoring page
+  - "Settings" button navigates to Settings page
+- **Emergency Dispatch Fix** (Nov 8, 2025): Fixed ambulance dispatch 500 error by creating fall events in database before emergency navigation
+- **Authentication System** (Nov 2025): Implemented traditional Gmail-based authentication for 4 authorized accounts with session-based auth
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

@@ -1,9 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Video, Settings } from "lucide-react";
+import { Phone, Video, Settings, PhoneOff } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import parentPhoto from "@assets/generated_images/Elderly_parent_profile_photo_50154e6f.png";
+import { useLocation } from "wouter";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ParentStatusCardProps {
   name?: string;
@@ -20,6 +23,10 @@ export default function ParentStatusCard({
   status = "active",
   photoUrl = parentPhoto,
 }: ParentStatusCardProps) {
+  const [, navigate] = useLocation();
+  const [isCalling, setIsCalling] = useState(false);
+  const { toast } = useToast();
+
   const getStatusColor = () => {
     switch (status) {
       case "alert":
@@ -44,6 +51,32 @@ export default function ParentStatusCard({
       default:
         return "Unknown";
     }
+  };
+
+  const handleCall = () => {
+    if (isCalling) {
+      // End the call
+      setIsCalling(false);
+      toast({
+        title: "Call Ended",
+        description: "Call disconnected",
+      });
+    } else {
+      // Start the call
+      setIsCalling(true);
+      toast({
+        title: "Calling...",
+        description: `Ringing ${name}`,
+      });
+    }
+  };
+
+  const handleViewCamera = () => {
+    navigate("/live-monitoring");
+  };
+
+  const handleSettings = () => {
+    navigate("/settings");
   };
 
   return (
@@ -74,15 +107,39 @@ export default function ParentStatusCard({
             Last active: {lastActive}
           </p>
           <div className="flex gap-2 mt-4 flex-wrap">
-            <Button size="sm" data-testid="button-call-parent">
-              <Phone className="h-4 w-4 mr-2" />
-              Call Parent
+            <Button 
+              size="sm" 
+              variant={isCalling ? "destructive" : "default"}
+              onClick={handleCall}
+              data-testid="button-call-parent"
+            >
+              {isCalling ? (
+                <>
+                  <PhoneOff className="h-4 w-4 mr-2" />
+                  Ringing...
+                </>
+              ) : (
+                <>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call Parent
+                </>
+              )}
             </Button>
-            <Button size="sm" variant="outline" data-testid="button-view-camera">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleViewCamera}
+              data-testid="button-view-camera"
+            >
               <Video className="h-4 w-4 mr-2" />
               View Camera
             </Button>
-            <Button size="sm" variant="outline" data-testid="button-emergency-settings">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleSettings}
+              data-testid="button-emergency-settings"
+            >
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
