@@ -20,6 +20,7 @@ export default function LiveMonitoringFeed({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [privacyMode, setPrivacyMode] = useState(mode === "skeletal");
@@ -67,8 +68,11 @@ export default function LiveMonitoringFeed({
 
         await detector.initialize();
         setIsInitialized(true);
+        setInitError(null);
       } catch (error) {
         console.error("Failed to initialize detector:", error);
+        setInitError("MediaPipe requires WebGL 2.0. Please use a modern browser with GPU acceleration.");
+        setIsInitialized(false);
       }
     };
 
@@ -85,6 +89,11 @@ export default function LiveMonitoringFeed({
   }, [onFallDetected]);
 
   const startCamera = async () => {
+    if (!isInitialized) {
+      console.warn("Cannot start camera - detector not initialized yet");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480 },
@@ -117,8 +126,13 @@ export default function LiveMonitoringFeed({
   };
 
   const startDetection = () => {
+    if (!isInitialized || !detectorRef.current) {
+      console.warn("Cannot start detection - detector not ready");
+      return;
+    }
+
     const detectFrame = async () => {
-      if (!videoRef.current || !canvasRef.current || !detectorRef.current) {
+      if (!videoRef.current || !canvasRef.current || !detectorRef.current || !isInitialized) {
         return;
       }
 
@@ -136,17 +150,21 @@ export default function LiveMonitoringFeed({
       canvas.height = video.videoHeight;
 
       // Process frame
-      const results = await detectorRef.current.processFrame(video);
+      try {
+        const results = await detectorRef.current.processFrame(video);
 
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw skeletal overlay
-      if (privacyMode && results) {
-        detectorRef.current.drawLandmarks(ctx, results);
-      } else if (!privacyMode) {
-        // Show video feed
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Draw skeletal overlay
+        if (privacyMode && results) {
+          detectorRef.current.drawLandmarks(ctx, results);
+        } else if (!privacyMode) {
+          // Show video feed
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+      } catch (error) {
+        console.error("Error processing frame:", error);
       }
 
       animationFrameRef.current = requestAnimationFrame(detectFrame);
@@ -211,16 +229,26 @@ export default function LiveMonitoringFeed({
 
         {!cameraActive && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
+            <div className="text-center max-w-md px-4">
               <Camera className="h-16 w-16 text-white/60 mx-auto mb-4" />
-              <Button
-                onClick={startCamera}
-                variant="secondary"
-                className="bg-primary text-primary-foreground"
-                data-testid="button-start-camera"
-              >
-                Start Monitoring
-              </Button>
+              {initError ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-destructive">{initError}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Tip: Use Chrome, Edge, or Firefox with hardware acceleration enabled
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  onClick={startCamera}
+                  variant="secondary"
+                  className="bg-primary text-primary-foreground"
+                  disabled={!isInitialized}
+                  data-testid="button-start-camera"
+                >
+                  {isInitialized ? "Start Monitoring" : "Initializing AI..."}
+                </Button>
+              )}
             </div>
           </div>
         )}
