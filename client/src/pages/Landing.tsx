@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heart, Shield, Activity, MapPin, Clock, Bell, Smartphone } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/auth/signin";
-  };
+  const [, setLocation] = useLocation();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -16,9 +15,14 @@ export default function Landing() {
               <Heart className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">Elder Safety System</span>
             </div>
-            <Button onClick={handleLogin} data-testid="button-login">
-              Sign In
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setLocation("/signin")} data-testid="button-signin">
+                Sign In
+              </Button>
+              <Button onClick={() => setLocation("/signup")} data-testid="button-signup">
+                Sign Up
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -33,12 +37,12 @@ export default function Landing() {
               Real-time fall detection with skeletal tracking, automatic hospital dispatch,
               live ambulance GPS tracking, and dynamic vital signs monitoring.
             </p>
-            <div className="flex gap-4 justify-center">
-              <Button size="lg" onClick={handleLogin} data-testid="button-get-started">
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Button size="lg" onClick={() => setLocation("/signup")} data-testid="button-get-started">
                 Get Started
               </Button>
-              <Button size="lg" variant="outline" data-testid="button-learn-more">
-                Learn More
+              <Button size="lg" variant="outline" onClick={() => setLocation("/signin")} data-testid="button-sign-in-hero">
+                Sign In
               </Button>
             </div>
           </div>

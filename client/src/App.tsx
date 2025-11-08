@@ -9,6 +9,8 @@ import ThemeToggle from "@/components/ThemeToggle";
 import EmergencyButton from "@/components/EmergencyButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "@/pages/Landing";
+import SignIn from "@/pages/SignIn";
+import SignUp from "@/pages/SignUp";
 import Dashboard from "@/pages/Dashboard";
 import Monitoring from "@/pages/Monitoring";
 import LiveMonitoring from "@/pages/LiveMonitoring";
@@ -34,16 +36,20 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Landing />;
-  }
-
   return (
     <Switch>
+      <Route path="/signin">
+        <SignIn />
+      </Route>
+      <Route path="/signup">
+        <SignUp />
+      </Route>
       <Route path="/">
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
+        {!isAuthenticated ? <Landing /> : (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        )}
       </Route>
       <Route path="/dashboard">
         <ProtectedRoute>
