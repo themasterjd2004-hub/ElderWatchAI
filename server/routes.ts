@@ -5,9 +5,13 @@ import { storage } from "./storage";
 import { insertFallEventSchema, insertParentSchema, insertAlertSchema } from "@shared/schema";
 import { z } from "zod";
 import { seedDemoData } from "./demo-data";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  // Setup authentication
+  await setupAuth(app);
 
   // Seed demo data for testing
   await seedDemoData();
@@ -37,6 +41,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Store io instance for use in routes
   (app as any).io = io;
+
+  // === Auth Routes ===
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        console.error(`User not found in storage: ${userId}`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // === Demo Data Route ===
   app.get("/api/demo-ids", async (req, res) => {

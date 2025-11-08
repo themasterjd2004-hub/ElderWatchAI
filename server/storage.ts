@@ -1,6 +1,7 @@
 import {
   type User,
   type InsertUser,
+  type UpsertUser,
   type Parent,
   type InsertParent,
   type FallEvent,
@@ -17,6 +18,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Parent methods
   getParent(id: string): Promise<Parent | undefined>;
@@ -70,9 +72,55 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      id, 
+      email: insertUser.email ?? null,
+      firstName: insertUser.firstName ?? null,
+      lastName: insertUser.lastName ?? null,
+      profileImageUrl: insertUser.profileImageUrl ?? null,
+      role: insertUser.role ?? "user",
+      username: insertUser.username ?? null,
+      password: insertUser.password ?? null,
+      phone: insertUser.phone ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async upsertUser(upsertData: UpsertUser): Promise<User> {
+    const existingId = upsertData.id ?? "";
+    const existing = this.users.get(existingId);
+    
+    if (existing) {
+      const updated: User = {
+        ...existing,
+        email: upsertData.email !== undefined ? (upsertData.email ?? null) : existing.email,
+        firstName: upsertData.firstName !== undefined ? (upsertData.firstName ?? null) : existing.firstName,
+        lastName: upsertData.lastName !== undefined ? (upsertData.lastName ?? null) : existing.lastName,
+        profileImageUrl: upsertData.profileImageUrl !== undefined ? (upsertData.profileImageUrl ?? null) : existing.profileImageUrl,
+        updatedAt: new Date(),
+      };
+      this.users.set(existingId, updated);
+      return updated;
+    } else {
+      const newUser: User = {
+        id: existingId,
+        email: upsertData.email ?? null,
+        firstName: upsertData.firstName ?? null,
+        lastName: upsertData.lastName ?? null,
+        profileImageUrl: upsertData.profileImageUrl ?? null,
+        role: "user",
+        username: null,
+        password: null,
+        phone: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.users.set(existingId, newUser);
+      return newUser;
+    }
   }
 
   // Parent methods
@@ -89,10 +137,15 @@ export class MemStorage implements IStorage {
   async createParent(insertParent: InsertParent): Promise<Parent> {
     const id = randomUUID();
     const parent: Parent = {
-      ...insertParent,
       id,
-      medicalConditions: insertParent.medicalConditions || [],
-      monitoringMode: insertParent.monitoringMode || "skeletal",
+      userId: insertParent.userId,
+      name: insertParent.name,
+      age: insertParent.age ?? null,
+      address: insertParent.address ?? null,
+      phoneNumber: insertParent.phoneNumber ?? null,
+      emergencyContact: insertParent.emergencyContact ?? null,
+      medicalConditions: insertParent.medicalConditions ?? null,
+      monitoringMode: insertParent.monitoringMode ?? "skeletal",
       localOnly: insertParent.localOnly ?? true,
       autoDelete: insertParent.autoDelete ?? true,
       hospitalApiEnabled: insertParent.hospitalApiEnabled ?? true,
@@ -126,10 +179,18 @@ export class MemStorage implements IStorage {
   async createFallEvent(insertEvent: InsertFallEvent): Promise<FallEvent> {
     const id = randomUUID();
     const fallEvent: FallEvent = {
-      ...insertEvent,
       id,
+      parentId: insertEvent.parentId,
       timestamp: new Date(),
-      status: insertEvent.status || "pending",
+      type: insertEvent.type,
+      confidence: insertEvent.confidence,
+      status: insertEvent.status ?? "pending",
+      location: insertEvent.location ?? null,
+      gpsCoordinates: (insertEvent.gpsCoordinates ?? null) as { lat: number; lng: number; accuracy?: number } | null,
+      snapshot: insertEvent.snapshot ?? null,
+      vitals: (insertEvent.vitals ?? null) as { heartRate?: number; breathing?: number; motion?: string } | null,
+      keypointMetrics: (insertEvent.keypointMetrics ?? null) as { verticalVelocity?: number; bodyAngle?: number; aspectRatio?: number; headToHipDistance?: number } | null,
+      motionWindow: (insertEvent.motionWindow ?? null) as { startTime: string; endTime: string; movementDetected: boolean; avgMovement: number } | null,
       acknowledgedAt: null,
       acknowledgedBy: null,
       responseTime: null,
