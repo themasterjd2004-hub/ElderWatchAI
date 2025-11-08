@@ -81,6 +81,12 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
+        medical: {
+          critical: "rgb(239 68 68)",
+          warning: "rgb(245 158 11)",
+          stable: "rgb(34 197 94)",
+          monitoring: "rgb(59 130 246)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
