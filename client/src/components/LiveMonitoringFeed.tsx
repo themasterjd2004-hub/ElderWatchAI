@@ -287,7 +287,10 @@ export default function LiveMonitoringFeed({
         return (
           <Badge className="bg-black/80 text-base px-4 py-2 border border-destructive">
             <span className="h-2 w-2 rounded-full bg-destructive mr-2 animate-pulse" />
-            <span className="text-destructive font-bold text-2xl tabular-nums">{countdown}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-destructive font-bold text-2xl tabular-nums">{Math.ceil(countdown || 0)}</span>
+              <span className="text-destructive">No movement found.</span>
+            </div>
           </Badge>
         );
       case "alert_triggered":
