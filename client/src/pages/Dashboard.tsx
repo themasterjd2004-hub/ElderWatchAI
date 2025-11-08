@@ -78,8 +78,8 @@ export default function Dashboard() {
         timestamp: data.fallEvent.timestamp,
         location: data.fallEvent.gpsCoordinates,
         vitals: {
-          heartRate: data.fallEvent.heartRate || 110,
-          breathing: data.fallEvent.breathing || 22,
+          heartRate: 110,
+          breathing: 22,
         },
       });
       

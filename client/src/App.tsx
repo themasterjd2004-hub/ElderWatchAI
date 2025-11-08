@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
-import EmergencyButton from "@/components/EmergencyButton";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "@/pages/Landing";
 import SignIn from "@/pages/SignIn";
@@ -18,8 +17,6 @@ import History from "@/pages/History";
 import Privacy from "@/pages/Privacy";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
-import { useState } from "react";
-import EmergencyDispatchModal from "@/components/EmergencyDispatchModal";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -84,8 +81,6 @@ function Router() {
 }
 
 export default function App() {
-  const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
-
   const style = {
     "--sidebar-width": "16rem",
   };
@@ -93,20 +88,14 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthWrapper 
-          emergencyModalOpen={emergencyModalOpen}
-          setEmergencyModalOpen={setEmergencyModalOpen}
-          style={style}
-        />
+        <AuthWrapper style={style} />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
 
-function AuthWrapper({ emergencyModalOpen, setEmergencyModalOpen, style }: {
-  emergencyModalOpen: boolean;
-  setEmergencyModalOpen: (open: boolean) => void;
+function AuthWrapper({ style }: {
   style: Record<string, string>;
 }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -140,11 +129,6 @@ function AuthWrapper({ emergencyModalOpen, setEmergencyModalOpen, style }: {
           </main>
         </div>
       </div>
-      <EmergencyButton onClick={() => setEmergencyModalOpen(true)} hasAlert={false} />
-      <EmergencyDispatchModal
-        open={emergencyModalOpen}
-        onOpenChange={setEmergencyModalOpen}
-      />
     </SidebarProvider>
   );
 }
