@@ -8,10 +8,15 @@ import { useFallDetection } from "@/hooks/useFallDetection";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useEffect, useState } from "react";
 import { getDemoIds } from "@/lib/demoIds";
+import DashboardEmergencyDialog from "@/components/DashboardEmergencyDialog";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { FallAlert } from "@/modules/fall-detection";
 
 export default function LiveMonitoring() {
   const [userId, setUserId] = useState<string | undefined>();
   const [parentId, setParentId] = useState<string | undefined>();
+  const { toast } = useToast();
 
   useEffect(() => {
     getDemoIds().then(({ userId, parentId }) => {
@@ -25,12 +30,83 @@ export default function LiveMonitoring() {
   useWebSocket(userId);
 
   const [showAlert, setShowAlert] = useState(false);
+  const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
+  const [emergencyData, setEmergencyData] = useState<{
+    fallAlert: FallAlert;
+    hospital: any;
+    etaMinutes: number;
+  } | null>(null);
 
   useEffect(() => {
     if (currentAlert) {
       setShowAlert(true);
     }
   }, [currentAlert]);
+
+  const handleCountdownComplete = (alert: FallAlert, hospital: any, etaMinutes: number) => {
+    setEmergencyData({ fallAlert: alert, hospital, etaMinutes });
+    setShowEmergencyDialog(true);
+  };
+
+  const handleEmergencyConfirm = async () => {
+    if (!emergencyData || !userId) return;
+
+    try {
+      // Find nearest available ambulance
+      const ambulancesRes = await apiRequest(
+        "GET",
+        `/api/ambulances/available?lat=${emergencyData.fallAlert.gpsCoordinates?.lat}&lng=${emergencyData.fallAlert.gpsCoordinates?.lng}&limit=1`
+      );
+      const ambulances = await ambulancesRes.json();
+
+      if (!ambulances || ambulances.length === 0) {
+        toast({
+          title: "Error",
+          description: "No ambulances available nearby",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const ambulance = ambulances[0];
+
+      // Dispatch ambulance
+      const dispatchRes = await apiRequest("POST", "/api/ambulances/dispatch", {
+        ambulanceId: ambulance.id,
+        fallEventTimestamp: emergencyData.fallAlert.timestamp,
+        destination: emergencyData.fallAlert.gpsCoordinates,
+        userId: userId,
+      });
+
+      if (!dispatchRes.ok) {
+        throw new Error("Failed to dispatch ambulance");
+      }
+
+      toast({
+        title: "Emergency Dispatched",
+        description: `Ambulance dispatched to ${emergencyData.hospital.name}`,
+      });
+
+      setShowEmergencyDialog(false);
+      setEmergencyData(null);
+    } catch (error: any) {
+      console.error("Failed to dispatch:", error);
+      toast({
+        title: "Dispatch Failed",
+        description: error.message || "Failed to dispatch ambulance",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEmergencyCancel = () => {
+    setShowEmergencyDialog(false);
+    setEmergencyData(null);
+    toast({
+      title: "Emergency Canceled",
+      description: "Emergency dispatch has been canceled",
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -141,7 +217,24 @@ export default function LiveMonitoring() {
           <LiveMonitoringFeed
             parentId={parentId}
             onFallDetected={handleFallDetected}
+            onCountdownComplete={handleCountdownComplete}
           />
+          
+          {showEmergencyDialog && emergencyData && (
+            <DashboardEmergencyDialog
+              open={showEmergencyDialog}
+              onOpenChange={setShowEmergencyDialog}
+              onConfirm={handleEmergencyConfirm}
+              onCancel={handleEmergencyCancel}
+              data={{
+                fallAlert: emergencyData.fallAlert,
+                hospital: emergencyData.hospital,
+                etaMinutes: emergencyData.etaMinutes,
+                confidence: emergencyData.fallAlert.confidence,
+                destination: emergencyData.fallAlert.gpsCoordinates || { lat: 0, lng: 0 },
+              }}
+            />
+          )}
           
           <Card className="p-4">
             <div className="flex items-start gap-3">

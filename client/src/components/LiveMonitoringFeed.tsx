@@ -5,19 +5,20 @@ import { Camera, Mic, MicOff, Settings, Eye, EyeOff, AlertTriangle } from "lucid
 import { useState, useRef, useEffect } from "react";
 import { DetectorService, DetectorState, DetectorEvent, FallAlert } from "@/modules/fall-detection";
 import { PoseLandmarker } from "@mediapipe/tasks-vision";
-import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface LiveMonitoringFeedProps {
   parentId?: string;
   onFallDetected?: (alert: FallAlert) => void;
+  onCountdownComplete?: (alert: FallAlert, hospital: any, etaMinutes: number) => void;
   mode?: "skeletal" | "normal";
 }
 
 export default function LiveMonitoringFeed({
   parentId,
   onFallDetected,
+  onCountdownComplete,
   mode = "skeletal",
 }: LiveMonitoringFeedProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,7 +34,6 @@ export default function LiveMonitoringFeed({
   const [currentFallAlert, setCurrentFallAlert] = useState<FallAlert | null>(null);
   const detectorRef = useRef<DetectorService | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const autoDispatchTriggered = useRef(false);
 
@@ -63,10 +63,10 @@ export default function LiveMonitoringFeed({
             const timeRemaining = Math.ceil(event.data?.timeRemaining || 0);
             setCountdown(timeRemaining);
             
-            // Redirect to confirmation when countdown reaches 0
+            // Trigger dialog when countdown reaches 0
             if (timeRemaining === 0 && !autoDispatchTriggered.current) {
               autoDispatchTriggered.current = true;
-              handleRedirectToConfirmation(event.data?.fallAlert || currentFallAlert);
+              handleShowConfirmation(event.data?.fallAlert || currentFallAlert);
             }
           }
 
@@ -203,8 +203,8 @@ export default function LiveMonitoringFeed({
     detectFrame();
   };
 
-  const handleRedirectToConfirmation = async (alert: FallAlert | null) => {
-    if (!alert) return;
+  const handleShowConfirmation = async (alert: FallAlert | null) => {
+    if (!alert || !onCountdownComplete) return;
 
     try {
       // Get destination from fall alert
@@ -236,18 +236,8 @@ export default function LiveMonitoringFeed({
       setFallConfidence(null);
       setCurrentFallAlert(null);
 
-      // Navigate to dashboard with pre-computed data
-      setLocation("/", {
-        state: {
-          emergencyDispatch: {
-            fallAlert: alert,
-            hospital: hospital,
-            etaMinutes: etaMinutes,
-            confidence: fallConfidence || 0.92,
-            destination: destination,
-          }
-        }
-      });
+      // Trigger parent callback to show dialog
+      onCountdownComplete(alert, hospital, etaMinutes);
     } catch (error: any) {
       console.error("Failed to prepare confirmation:", error);
       toast({
@@ -281,28 +271,28 @@ export default function LiveMonitoringFeed({
     switch (detectorState) {
       case "monitoring":
         return (
-          <Badge className="bg-medical-stable text-white">
+          <Badge className="bg-medical-stable text-white text-base px-4 py-2">
             <span className="h-2 w-2 rounded-full bg-white mr-2 animate-pulse" />
             {status}
           </Badge>
         );
       case "fall_detected":
         return (
-          <Badge className="bg-medical-warning text-white">
+          <Badge className="bg-medical-warning text-white text-base px-4 py-2">
             <AlertTriangle className="h-3 w-3 mr-1" />
             {status}
           </Badge>
         );
       case "motion_check":
         return (
-          <Badge className="bg-medical-critical text-white">
-            <span className="h-2 w-2 rounded-full bg-white mr-2 animate-pulse" />
-            {status} - {countdown}s
+          <Badge className="bg-black/80 text-base px-4 py-2 border border-destructive">
+            <span className="h-2 w-2 rounded-full bg-destructive mr-2 animate-pulse" />
+            <span className="text-destructive font-bold text-2xl tabular-nums">{countdown}</span>
           </Badge>
         );
       case "alert_triggered":
         return (
-          <Badge className="bg-medical-critical text-white">
+          <Badge className="bg-medical-critical text-white text-base px-4 py-2">
             {status}
           </Badge>
         );
@@ -318,36 +308,6 @@ export default function LiveMonitoringFeed({
   return (
     <Card className="overflow-hidden" data-testid="card-monitoring-feed">
       <div className="relative aspect-video bg-black">
-        {/* Prominent countdown overlay - shown above the recording area when patient not visible */}
-        {detectorState === "motion_check" && countdown !== null && countdown > 0 && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="text-center space-y-4 p-8">
-              <AlertTriangle className="h-16 w-16 text-destructive mx-auto animate-pulse" />
-              <div>
-                <h2 className="text-4xl font-bold text-white mb-2">Patient Not Visible</h2>
-                <p className="text-lg text-white/80">No motion detected after fall</p>
-              </div>
-              <div className="relative">
-                <div className="text-8xl font-bold text-destructive tabular-nums">
-                  {countdown}
-                </div>
-                <div className="text-lg text-white/80 mt-2">seconds until confirmation required</div>
-              </div>
-              <div className="w-full max-w-md mx-auto">
-                <div className="w-full bg-white/20 rounded-full h-3">
-                  <div
-                    className="bg-destructive h-3 rounded-full transition-all duration-1000"
-                    style={{ width: `${((10 - countdown) / 10) * 100}%` }}
-                  />
-                </div>
-              </div>
-              <p className="text-sm text-white/60 max-w-md">
-                You'll be redirected to the dashboard to confirm emergency dispatch
-              </p>
-            </div>
-          </div>
-        )}
-
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
