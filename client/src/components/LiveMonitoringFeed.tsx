@@ -331,7 +331,7 @@ export default function LiveMonitoringFeed({
                 <div className="text-8xl font-bold text-destructive tabular-nums">
                   {countdown}
                 </div>
-                <div className="text-lg text-white/80 mt-2">seconds until auto-dispatch</div>
+                <div className="text-lg text-white/80 mt-2">seconds until confirmation required</div>
               </div>
               <div className="w-full max-w-md mx-auto">
                 <div className="w-full bg-white/20 rounded-full h-3">
@@ -342,7 +342,7 @@ export default function LiveMonitoringFeed({
                 </div>
               </div>
               <p className="text-sm text-white/60 max-w-md">
-                You will be asked to confirm emergency dispatch if no movement is detected
+                You'll be redirected to the dashboard to confirm emergency dispatch
               </p>
             </div>
           </div>
