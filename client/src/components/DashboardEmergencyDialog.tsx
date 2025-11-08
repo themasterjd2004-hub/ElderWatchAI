@@ -25,6 +25,7 @@ interface DashboardEmergencyDialogProps {
   data: EmergencyDispatchData;
   onConfirm: () => void;
   onCancel: () => void;
+  countdown?: number | null;
 }
 
 export default function DashboardEmergencyDialog({
@@ -33,6 +34,7 @@ export default function DashboardEmergencyDialog({
   data,
   onConfirm,
   onCancel,
+  countdown,
 }: DashboardEmergencyDialogProps) {
   const { hospital, etaMinutes, confidence, destination } = data;
 
@@ -45,7 +47,14 @@ export default function DashboardEmergencyDialog({
             <AlertDialogTitle className="text-2xl">Confirm Emergency Dispatch</AlertDialogTitle>
           </div>
           <AlertDialogDescription className="text-base">
-            This will send emergency services to your parent's location
+            {countdown !== null && countdown !== undefined ? (
+              <span className="flex items-center gap-2">
+                <span className="font-bold text-destructive text-lg">{countdown}s</span>
+                <span>No movement found. Emergency services will be dispatched automatically</span>
+              </span>
+            ) : (
+              "This will send emergency services to your parent's location"
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

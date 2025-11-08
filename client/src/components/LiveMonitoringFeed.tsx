@@ -7,6 +7,7 @@ import { DetectorService, DetectorState, DetectorEvent, FallAlert } from "@/modu
 import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface LiveMonitoringFeedProps {
   parentId?: string;
@@ -35,7 +36,9 @@ export default function LiveMonitoringFeed({
   const detectorRef = useRef<DetectorService | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const autoDispatchTriggered = useRef(false);
+  const navigationTriggered = useRef(false);
 
   useEffect(() => {
     let detector: DetectorService | null = null;
@@ -63,13 +66,20 @@ export default function LiveMonitoringFeed({
             const timeRemaining = event.data?.timeRemaining;
             // Preserve null when person reappears, otherwise ceil the countdown value
             const countdownValue = timeRemaining === null || timeRemaining === undefined ? null : Math.ceil(timeRemaining);
-            setCountdown(countdownValue);
             
-            // Trigger dialog when countdown reaches 0
-            if (countdownValue === 0 && !autoDispatchTriggered.current) {
-              autoDispatchTriggered.current = true;
-              handleShowConfirmation(event.data?.fallAlert || currentFallAlert);
+            // Navigate to Dashboard immediately when no movement detected (countdown starts)
+            if (countdownValue !== null && countdown === null && !navigationTriggered.current) {
+              navigationTriggered.current = true;
+              handleImmediateNavigation(event.data?.fallAlert || currentFallAlert);
+              return;
             }
+            
+            // Reset navigation trigger when movement is detected again
+            if (countdownValue === null) {
+              navigationTriggered.current = false;
+            }
+            
+            setCountdown(countdownValue);
           }
 
           if (event.type === "alert_triggered") {
@@ -203,6 +213,55 @@ export default function LiveMonitoringFeed({
     };
 
     detectFrame();
+  };
+
+  const handleImmediateNavigation = async (alert: FallAlert | null) => {
+    if (!alert) return;
+
+    try {
+      // Get destination from fall alert
+      const destination = alert.gpsCoordinates || { lat: 12.9716, lng: 77.5946 };
+
+      // Find nearest hospital using Haversine formula
+      const hospitalsRes = await apiRequest(
+        "GET", 
+        `/api/hospitals/nearest?lat=${destination.lat}&lng=${destination.lng}&limit=1`
+      );
+      const hospitals = await hospitalsRes.json();
+      
+      if (!hospitals || hospitals.length === 0) {
+        toast({
+          title: "Error",
+          description: "No hospitals found nearby",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const hospital = hospitals[0];
+
+      // Calculate ETA (hospital.distance is in km, average ambulance speed ~40 km/h)
+      const etaMinutes = Math.round((hospital.distance / 40) * 60);
+
+      // Store emergency data and navigate to Dashboard
+      const emergencyData = {
+        fallAlert: alert,
+        hospital,
+        etaMinutes,
+        confidence: alert.confidence,
+        destination,
+        showCountdown: true,
+      };
+      sessionStorage.setItem('emergencyDispatch', JSON.stringify(emergencyData));
+      navigate("/");
+    } catch (error: any) {
+      console.error("Failed to prepare emergency navigation:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to prepare emergency dispatch",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShowConfirmation = async (alert: FallAlert | null) => {

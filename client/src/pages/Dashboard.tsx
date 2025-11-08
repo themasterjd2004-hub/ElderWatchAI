@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [userId, setUserId] = useState<string | undefined>();
   const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false);
   const [emergencyDispatchData, setEmergencyDispatchData] = useState<any>(null);
+  const [emergencyCountdown, setEmergencyCountdown] = useState<number | null>(null);
   
   // Get user ID
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function Dashboard() {
         const emergencyData = JSON.parse(emergencyDataStr);
         setEmergencyDispatchData(emergencyData);
         setEmergencyDialogOpen(true);
+        setEmergencyCountdown(10); // Start 10 second countdown
         
         // Clear sessionStorage to prevent re-opening on refresh
         sessionStorage.removeItem('emergencyDispatch');
@@ -47,6 +49,24 @@ export default function Dashboard() {
       }
     }
   }, []);
+
+  // Countdown timer for emergency dispatch
+  useEffect(() => {
+    if (emergencyCountdown === null || emergencyCountdown <= 0) return;
+
+    const timer = setTimeout(() => {
+      setEmergencyCountdown(prev => {
+        if (prev === null || prev <= 1) {
+          // Countdown reached 0, auto-dispatch
+          handleEmergencyConfirm();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [emergencyCountdown]);
 
   // Listen for real-time fall alerts via WebSocket
   useEffect(() => {
@@ -181,6 +201,7 @@ export default function Dashboard() {
       setDispatchedAmbulance(dispatched);
       setEmergencyDialogOpen(false);
       setEmergencyDispatchData(null);
+      setEmergencyCountdown(null); // Stop countdown
 
       toast({
         title: "Emergency Dispatched",
@@ -193,12 +214,14 @@ export default function Dashboard() {
         variant: "destructive",
       });
       setEmergencyDialogOpen(false);
+      setEmergencyCountdown(null); // Stop countdown on error too
     }
   };
 
   const handleEmergencyCancel = () => {
     setEmergencyDialogOpen(false);
     setEmergencyDispatchData(null);
+    setEmergencyCountdown(null); // Stop countdown
     toast({
       title: "Emergency Dispatch Cancelled",
       description: "The emergency dispatch has been cancelled",
@@ -334,6 +357,7 @@ export default function Dashboard() {
           data={emergencyDispatchData}
           onConfirm={handleEmergencyConfirm}
           onCancel={handleEmergencyCancel}
+          countdown={emergencyCountdown}
         />
       )}
     </div>
