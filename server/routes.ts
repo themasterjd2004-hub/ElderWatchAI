@@ -51,7 +51,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   (app as any).io = io;
 
   // === Traditional Auth Routes ===
-  app.post('/api/auth/signup', signup);
+  // Signup disabled - only authorized users can access the system
+  // app.post('/api/auth/signup', signup);
   app.post('/api/auth/signin', signin);
   app.post('/api/auth/signout', signout);
   

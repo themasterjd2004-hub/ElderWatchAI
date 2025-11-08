@@ -103,17 +103,6 @@ export default function SignIn() {
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
-              <div className="text-sm text-center text-muted-foreground">
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={() => setLocation("/signup")}
-                  data-testid="link-signup"
-                >
-                  Sign up
-                </button>
-              </div>
             </CardFooter>
           </form>
         </Card>

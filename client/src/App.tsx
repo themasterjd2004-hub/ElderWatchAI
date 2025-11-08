@@ -41,11 +41,8 @@ function Router() {
       <Route path="/signin">
         <SignIn />
       </Route>
-      <Route path="/signup">
-        <SignUp />
-      </Route>
       <Route path="/">
-        {!isAuthenticated ? <Landing /> : (
+        {!isAuthenticated ? <SignIn /> : (
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>

@@ -3,11 +3,60 @@ import { hashPassword } from "./traditionalAuth";
 
 export async function seedDemoData() {
   try {
-    // Check if demo user exists
-    let demoUser = await storage.getUserByEmail("demo@example.com");
-    
+    // Authorized users configuration
+    const authorizedUsers = [
+      {
+        email: "saakshirai719@gmail.com",
+        password: "saakshi@123",
+        firstName: "Saakshi",
+        lastName: "Rai",
+      },
+      {
+        email: "lakshyajm3@gmail.com",
+        password: "lakshya@123",
+        firstName: "Lakshya",
+        lastName: "JM",
+      },
+      {
+        email: "dhruvkuruvilla@gmail.com",
+        password: "dhruv@123",
+        firstName: "Dhruv",
+        lastName: "Kuruvilla",
+      },
+      {
+        email: "shreyassmysuru@gmail.com",
+        password: "shreyas@123",
+        firstName: "Shreyas",
+        lastName: "S",
+      },
+    ];
+
+    // Create all authorized users
+    let demoUser = null;
+    for (const userData of authorizedUsers) {
+      let user = await storage.getUserByEmail(userData.email);
+      
+      if (!user) {
+        const hashedPassword = await hashPassword(userData.password);
+        user = await storage.createUser({
+          email: userData.email,
+          password: hashedPassword,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: "",
+          role: "user",
+        });
+        console.log(`✅ Authorized user created: ${userData.email}`);
+      }
+      
+      // Use first user as demo user
+      if (!demoUser) {
+        demoUser = user;
+      }
+    }
+
+    // Fallback: create demo user if none exist
     if (!demoUser) {
-      // Create demo user with hashed password
       const hashedPassword = await hashPassword("demo123");
       demoUser = await storage.createUser({
         email: "demo@example.com",
@@ -18,23 +67,6 @@ export async function seedDemoData() {
         role: "user",
       });
       console.log("✅ Demo user created:", demoUser.id);
-    }
-
-    // Check if requested user exists
-    let requestedUser = await storage.getUserByEmail("shreyassmysuru@gmail.com");
-    
-    if (!requestedUser) {
-      // Create requested user with hashed password
-      const hashedPassword = await hashPassword("shreyas123");
-      requestedUser = await storage.createUser({
-        email: "shreyassmysuru@gmail.com",
-        password: hashedPassword,
-        firstName: "Shreyas",
-        lastName: "S",
-        phone: "",
-        role: "user",
-      });
-      console.log("✅ Requested user created:", requestedUser.id);
     }
 
     // Check if demo parent exists
