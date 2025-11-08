@@ -33,13 +33,18 @@ export default function Dashboard() {
 
   // Check for emergency dispatch redirect from LiveMonitoring
   useEffect(() => {
-    const locationState = (window.history.state as any)?.usr;
-    if (locationState?.emergencyDispatch) {
-      setEmergencyDispatchData(locationState.emergencyDispatch);
-      setEmergencyDialogOpen(true);
-      
-      // Clear the state to prevent re-opening on refresh
-      window.history.replaceState({}, document.title);
+    const emergencyDataStr = sessionStorage.getItem('emergencyDispatch');
+    if (emergencyDataStr) {
+      try {
+        const emergencyData = JSON.parse(emergencyDataStr);
+        setEmergencyDispatchData(emergencyData);
+        setEmergencyDialogOpen(true);
+        
+        // Clear sessionStorage to prevent re-opening on refresh
+        sessionStorage.removeItem('emergencyDispatch');
+      } catch (error) {
+        console.error("Failed to parse emergency dispatch data:", error);
+      }
     }
   }, []);
 
