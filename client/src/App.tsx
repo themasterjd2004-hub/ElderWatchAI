@@ -7,6 +7,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 import EmergencyButton from "@/components/EmergencyButton";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Monitoring from "@/pages/Monitoring";
 import LiveMonitoring from "@/pages/LiveMonitoring";
@@ -14,27 +16,65 @@ import History from "@/pages/History";
 import Privacy from "@/pages/Privacy";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import EmergencyDispatchModal from "@/components/EmergencyDispatchModal";
-import { getDemoIds } from "@/lib/demoIds";
+import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
-  const [userId, setUserId] = useState<string | undefined>();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  useEffect(() => {
-    getDemoIds().then(({ userId }) => {
-      setUserId(userId);
-    });
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
 
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/monitoring" component={Monitoring} />
-      <Route path="/live-monitoring" component={LiveMonitoring} />
-      <Route path="/history" component={History} />
-      <Route path="/privacy" component={Privacy} />
-      <Route path="/settings" component={Settings} />
+      <Route path="/">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/monitoring">
+        <ProtectedRoute>
+          <Monitoring />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/live-monitoring">
+        <ProtectedRoute>
+          <LiveMonitoring />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/history">
+        <ProtectedRoute>
+          <History />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/privacy">
+        <ProtectedRoute>
+          <Privacy />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
@@ -50,27 +90,58 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SidebarProvider style={style as React.CSSProperties}>
-          <div className="flex h-screen w-full">
-            <AppSidebar />
-            <div className="flex flex-col flex-1 overflow-hidden">
-              <header className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10">
-                <SidebarTrigger data-testid="button-sidebar-toggle" />
-                <ThemeToggle />
-              </header>
-              <main className="flex-1 overflow-auto">
-                <Router />
-              </main>
-            </div>
-          </div>
-          <EmergencyButton onClick={() => setEmergencyModalOpen(true)} hasAlert={false} />
-          <EmergencyDispatchModal
-            open={emergencyModalOpen}
-            onOpenChange={setEmergencyModalOpen}
-          />
-        </SidebarProvider>
+        <AuthWrapper 
+          emergencyModalOpen={emergencyModalOpen}
+          setEmergencyModalOpen={setEmergencyModalOpen}
+          style={style}
+        />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
+  );
+}
+
+function AuthWrapper({ emergencyModalOpen, setEmergencyModalOpen, style }: {
+  emergencyModalOpen: boolean;
+  setEmergencyModalOpen: (open: boolean) => void;
+  style: Record<string, string>;
+}) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Router />;
+  }
+
+  return (
+    <SidebarProvider style={style as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <header className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10">
+            <SidebarTrigger data-testid="button-sidebar-toggle" />
+            <ThemeToggle />
+          </header>
+          <main className="flex-1 overflow-auto">
+            <Router />
+          </main>
+        </div>
+      </div>
+      <EmergencyButton onClick={() => setEmergencyModalOpen(true)} hasAlert={false} />
+      <EmergencyDispatchModal
+        open={emergencyModalOpen}
+        onOpenChange={setEmergencyModalOpen}
+      />
+    </SidebarProvider>
   );
 }
