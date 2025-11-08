@@ -6,6 +6,11 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **Settings Page Editable** (Nov 8, 2025): Complete settings page with full edit functionality
+  - All parent profile fields editable (name, age, address, phone, emergency contact, medical conditions)
+  - Notification toggles for email, SMS, and push notifications
+  - Dynamic emergency contacts with add/remove functionality
+  - Form validation and save/cancel buttons with toast notifications
 - **ParentStatusCard Actions** (Nov 8, 2025): All three buttons now functional
   - "Call Parent" button shows "Ringing..." state with toast notification
   - "View Camera" button navigates to Live Monitoring page
