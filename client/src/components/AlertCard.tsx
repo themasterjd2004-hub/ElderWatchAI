@@ -16,6 +16,7 @@ interface AlertCardProps {
   onSendEmergency?: () => void;
   onFalseAlarm?: () => void;
   onViewDetails?: () => void;
+  onAutoDispatch?: () => void;
 }
 
 export default function AlertCard({
@@ -27,16 +28,24 @@ export default function AlertCard({
   onSendEmergency,
   onFalseAlarm,
   onViewDetails,
+  onAutoDispatch,
 }: AlertCardProps) {
   const [timeLeft, setTimeLeft] = useState(countdown);
+  const [autoDispatched, setAutoDispatched] = useState(false);
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
+    if (timeLeft <= 0) {
+      if (!autoDispatched && onAutoDispatch) {
+        setAutoDispatched(true);
+        onAutoDispatch();
+      }
+      return;
+    }
     const timer = setInterval(() => {
       setTimeLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, autoDispatched, onAutoDispatch]);
 
   const progressPercentage = (timeLeft / countdown) * 100;
 

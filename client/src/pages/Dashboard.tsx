@@ -2,12 +2,132 @@ import ParentStatusCard from "@/components/ParentStatusCard";
 import VitalsPanel from "@/components/VitalsPanel";
 import AlertCard from "@/components/AlertCard";
 import IncidentTimeline from "@/components/IncidentTimeline";
+import AmbulanceTracker from "@/components/AmbulanceTracker";
 import { Card } from "@/components/ui/card";
-import { Activity, Shield, Clock, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { Activity, Shield, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { onFallAlert } from "@/lib/websocket";
+import { getDemoIds } from "@/lib/demoIds";
 
 export default function Dashboard() {
-  const [hasActiveAlert] = useState(true);
+  const { toast } = useToast();
+  const [currentFallAlert, setCurrentFallAlert] = useState<any>(null);
+  const [dispatchedAmbulance, setDispatchedAmbulance] = useState<any>(null);
+  const [nearestHospital, setNearestHospital] = useState<any>(null);
+  const [fallLocation, setFallLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userId, setUserId] = useState<string | undefined>();
+  
+  // Get user ID
+  useEffect(() => {
+    getDemoIds().then(({ userId }) => {
+      setUserId(userId);
+    });
+  }, []);
+
+  // Listen for real-time fall alerts via WebSocket
+  useEffect(() => {
+    const unsubscribe = onFallAlert((data) => {
+      setCurrentFallAlert({
+        type: "fall_alert",
+        fallEventId: data.fallEvent.id,
+        confidence: data.fallEvent.confidence,
+        timestamp: data.fallEvent.timestamp,
+        location: data.fallEvent.gpsCoordinates,
+        vitals: {
+          heartRate: data.fallEvent.heartRate || 110,
+          breathing: data.fallEvent.breathing || 22,
+        },
+      });
+      
+      toast({
+        title: "Fall Detected!",
+        description: `${data.parent.name} - Fall detected with ${data.fallEvent.confidence}% confidence`,
+        variant: "destructive",
+      });
+    });
+
+    return unsubscribe;
+  }, [toast]);
+
+  // Auto-dispatch when countdown reaches zero
+  const handleAutoDispatch = async () => {
+    if (!currentFallAlert) return;
+
+    // Persist fall location before clearing alert
+    const destination = currentFallAlert.location || { lat: 12.9716, lng: 77.5946 };
+    setFallLocation(destination);
+
+    try {
+      // Step 1: Find nearest hospital using Haversine formula
+      const hospitalsRes = await apiRequest(
+        "GET", 
+        `/api/hospitals/nearest?lat=${destination.lat}&lng=${destination.lng}&limit=1`
+      );
+      const hospitals = await hospitalsRes.json();
+      
+      if (!hospitals || hospitals.length === 0) {
+        toast({
+          title: "Error",
+          description: "No hospitals found nearby",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const hospital = hospitals[0];
+      setNearestHospital(hospital);
+
+      // Step 2: Find available ambulance from that hospital
+      const ambulancesRes = await apiRequest("GET", `/api/ambulances/hospital/${hospital.id}`);
+      const ambulances = await ambulancesRes.json();
+      const availableAmbulance = ambulances.find((a: any) => a.status === "available");
+
+      if (!availableAmbulance) {
+        toast({
+          title: "Error",
+          description: "No ambulances available at nearest hospital",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Step 3: Dispatch ambulance
+      const dispatchedRes = await apiRequest("POST", "/api/ambulances/dispatch", {
+        ambulanceId: availableAmbulance.id,
+        fallEventId: currentFallAlert.fallEventId,
+        destination: destination,
+      });
+      const dispatched = await dispatchedRes.json();
+
+      setDispatchedAmbulance(dispatched);
+      setCurrentFallAlert(null);
+
+      toast({
+        title: "Emergency Dispatched",
+        description: `Ambulance ${dispatched.vehicleNumber} dispatched from ${hospital.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Dispatch Failed",
+        description: error.message || "Failed to dispatch emergency services",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleManualDispatch = async () => {
+    await handleAutoDispatch();
+  };
+
+  const handleFalseAlarm = () => {
+    setCurrentFallAlert(null);
+    toast({
+      title: "Alert Dismissed",
+      description: "Fall alert marked as false alarm",
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -18,8 +138,28 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {hasActiveAlert && (
-        <AlertCard />
+      {currentFallAlert && (
+        <AlertCard
+          type="Fall Detected - No Motion"
+          timestamp={new Date(currentFallAlert.timestamp).toLocaleString()}
+          confidence={currentFallAlert.confidence}
+          vitals={{
+            heartRate: `${currentFallAlert.vitals?.heartRate || 110} BPM`,
+            breathing: `${currentFallAlert.vitals?.breathing || 22} per min`,
+          }}
+          countdown={10}
+          onSendEmergency={handleManualDispatch}
+          onFalseAlarm={handleFalseAlarm}
+          onAutoDispatch={handleAutoDispatch}
+        />
+      )}
+
+      {dispatchedAmbulance && fallLocation && (
+        <AmbulanceTracker
+          ambulance={dispatchedAmbulance}
+          hospital={nearestHospital}
+          destination={fallLocation}
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

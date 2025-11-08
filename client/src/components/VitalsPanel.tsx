@@ -1,5 +1,6 @@
 import { Heart, Activity, MapPin, Waves } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 
 interface Vital {
   id: string;
@@ -16,7 +17,7 @@ interface VitalsPanelProps {
 }
 
 export default function VitalsPanel({ vitals }: VitalsPanelProps) {
-  const defaultVitals: Vital[] = [
+  const [dynamicVitals, setDynamicVitals] = useState<Vital[]>([
     {
       id: "heart",
       label: "Heart Rate",
@@ -51,9 +52,46 @@ export default function VitalsPanel({ vitals }: VitalsPanelProps) {
       status: "stable",
       icon: <MapPin className="h-5 w-5" />,
     },
-  ];
+  ]);
 
-  const displayVitals = vitals || defaultVitals;
+  // Update vitals every minute (60000ms) with realistic variations
+  useEffect(() => {
+    const updateVitals = () => {
+      setDynamicVitals((prev) =>
+        prev.map((vital) => {
+          if (vital.id === "heart") {
+            // Heart rate: 60-85 BPM (normal range with slight variations)
+            const newValue = 68 + Math.floor(Math.random() * 15);
+            const status = newValue > 80 ? "warning" : "stable";
+            return { ...vital, value: newValue.toString(), status };
+          }
+          if (vital.id === "breathing") {
+            // Breathing: 12-20 per min (normal range)
+            const newValue = 14 + Math.floor(Math.random() * 6);
+            const status = newValue > 18 ? "warning" : "stable";
+            return { ...vital, value: newValue.toString(), status };
+          }
+          if (vital.id === "motion") {
+            // Motion: Random between Low, Medium, High
+            const motionLevels = ["Low", "Medium", "High"];
+            const newValue = motionLevels[Math.floor(Math.random() * motionLevels.length)];
+            return { ...vital, value: newValue };
+          }
+          return vital;
+        })
+      );
+    };
+
+    // Update immediately on mount
+    updateVitals();
+
+    // Then update every minute
+    const interval = setInterval(updateVitals, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const displayVitals = vitals || dynamicVitals;
 
   const getStatusColor = (status: string) => {
     switch (status) {
