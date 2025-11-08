@@ -63,10 +63,10 @@ export default function LiveMonitoringFeed({
             const timeRemaining = Math.ceil(event.data?.timeRemaining || 0);
             setCountdown(timeRemaining);
             
-            // Auto-dispatch when countdown reaches 0
+            // Redirect to confirmation when countdown reaches 0
             if (timeRemaining === 0 && !autoDispatchTriggered.current) {
               autoDispatchTriggered.current = true;
-              handleAutoDispatch(event.data?.fallAlert || currentFallAlert);
+              handleRedirectToConfirmation(event.data?.fallAlert || currentFallAlert);
             }
           }
 
@@ -203,14 +203,14 @@ export default function LiveMonitoringFeed({
     detectFrame();
   };
 
-  const handleAutoDispatch = async (alert: FallAlert | null) => {
+  const handleRedirectToConfirmation = async (alert: FallAlert | null) => {
     if (!alert) return;
 
     try {
       // Get destination from fall alert
       const destination = alert.gpsCoordinates || { lat: 12.9716, lng: 77.5946 };
 
-      // Step 1: Find nearest hospital using Haversine formula
+      // Find nearest hospital using Haversine formula
       const hospitalsRes = await apiRequest(
         "GET", 
         `/api/hospitals/nearest?lat=${destination.lat}&lng=${destination.lng}&limit=1`
@@ -228,86 +228,88 @@ export default function LiveMonitoringFeed({
 
       const hospital = hospitals[0];
 
-      // Step 2: Find available ambulance from that hospital
-      const ambulancesRes = await apiRequest("GET", `/api/ambulances/hospital/${hospital.id}`);
-      const ambulances = await ambulancesRes.json();
-      const availableAmbulance = ambulances.find((a: any) => a.status === "available");
-
-      if (!availableAmbulance) {
-        toast({
-          title: "Error",
-          description: "No ambulances available at nearest hospital",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Step 3: Dispatch ambulance
-      const dispatchedRes = await apiRequest("POST", "/api/ambulances/dispatch", {
-        ambulanceId: availableAmbulance.id,
-        fallEventId: alert.timestamp.toString(),
-        destination: destination,
-      });
-      const dispatched = await dispatchedRes.json();
+      // Calculate ETA (hospital.distance is in km, average ambulance speed ~40 km/h)
+      const etaMinutes = Math.round((hospital.distance / 40) * 60);
 
       // Reset states
       setCountdown(null);
       setFallConfidence(null);
       setCurrentFallAlert(null);
 
-      // Navigate to dashboard with dispatch info
-      toast({
-        title: "Emergency Dispatched",
-        description: `Ambulance ${dispatched.vehicleNumber} dispatched from ${hospital.name}`,
+      // Navigate to dashboard with pre-computed data
+      setLocation("/", {
+        state: {
+          emergencyDispatch: {
+            fallAlert: alert,
+            hospital: hospital,
+            etaMinutes: etaMinutes,
+            confidence: fallConfidence || 0.92,
+            destination: destination,
+          }
+        }
       });
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        setLocation("/");
-      }, 1500);
     } catch (error: any) {
-      console.error("Auto-dispatch failed:", error);
+      console.error("Failed to prepare confirmation:", error);
       toast({
-        title: "Dispatch Failed",
-        description: error.message || "Failed to dispatch emergency services",
+        title: "Error",
+        description: error.message || "Failed to prepare emergency dispatch",
         variant: "destructive",
       });
     }
   };
 
+  const getMonitoringStatus = () => {
+    // When monitoring and body detected, show "Monitoring"
+    // When no body detected (idle or motion_check without body), show "No movement found"
+    if (detectorState === "monitoring") {
+      return "Monitoring";
+    } else if (detectorState === "idle") {
+      return "No movement found";
+    } else if (detectorState === "motion_check") {
+      return "No movement found";
+    } else if (detectorState === "fall_detected") {
+      return `Fall Detected - ${Math.round((fallConfidence || 0.92) * 100)}%`;
+    } else if (detectorState === "alert_triggered") {
+      return "Alert Triggered";
+    }
+    return "Idle";
+  };
+
   const getStateBadge = () => {
+    const status = getMonitoringStatus();
+    
     switch (detectorState) {
       case "monitoring":
         return (
           <Badge className="bg-medical-stable text-white">
             <span className="h-2 w-2 rounded-full bg-white mr-2 animate-pulse" />
-            Monitoring
+            {status}
           </Badge>
         );
       case "fall_detected":
         return (
           <Badge className="bg-medical-warning text-white">
             <AlertTriangle className="h-3 w-3 mr-1" />
-            Fall Detected - {fallConfidence}%
+            {status}
           </Badge>
         );
       case "motion_check":
         return (
           <Badge className="bg-medical-critical text-white">
             <span className="h-2 w-2 rounded-full bg-white mr-2 animate-pulse" />
-            Motion Check: {countdown}s
+            {status} - {countdown}s
           </Badge>
         );
       case "alert_triggered":
         return (
           <Badge className="bg-medical-critical text-white">
-            🚨 Alert Triggered
+            {status}
           </Badge>
         );
       default:
         return (
           <Badge variant="secondary">
-            Idle
+            {status}
           </Badge>
         );
     }
@@ -340,7 +342,7 @@ export default function LiveMonitoringFeed({
                 </div>
               </div>
               <p className="text-sm text-white/60 max-w-md">
-                Emergency services will be automatically dispatched if no movement is detected
+                You will be asked to confirm emergency dispatch if no movement is detected
               </p>
             </div>
           </div>

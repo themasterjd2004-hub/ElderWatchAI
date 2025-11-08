@@ -3,6 +3,7 @@ import VitalsPanel from "@/components/VitalsPanel";
 import AlertCard from "@/components/AlertCard";
 import IncidentTimeline from "@/components/IncidentTimeline";
 import AmbulanceTracker from "@/components/AmbulanceTracker";
+import DashboardEmergencyDialog from "@/components/DashboardEmergencyDialog";
 import { Card } from "@/components/ui/card";
 import { Activity, Shield, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -10,20 +11,36 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { onFallAlert } from "@/lib/websocket";
 import { getDemoIds } from "@/lib/demoIds";
+import { useLocation } from "wouter";
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const [, , navigate] = useLocation() as any;
   const [currentFallAlert, setCurrentFallAlert] = useState<any>(null);
   const [dispatchedAmbulance, setDispatchedAmbulance] = useState<any>(null);
   const [nearestHospital, setNearestHospital] = useState<any>(null);
   const [fallLocation, setFallLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [userId, setUserId] = useState<string | undefined>();
+  const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false);
+  const [emergencyDispatchData, setEmergencyDispatchData] = useState<any>(null);
   
   // Get user ID
   useEffect(() => {
     getDemoIds().then(({ userId }) => {
       setUserId(userId);
     });
+  }, []);
+
+  // Check for emergency dispatch redirect from LiveMonitoring
+  useEffect(() => {
+    const locationState = (window.history.state as any)?.usr;
+    if (locationState?.emergencyDispatch) {
+      setEmergencyDispatchData(locationState.emergencyDispatch);
+      setEmergencyDialogOpen(true);
+      
+      // Clear the state to prevent re-opening on refresh
+      window.history.replaceState({}, document.title);
+    }
   }, []);
 
   // Listen for real-time fall alerts via WebSocket
@@ -123,9 +140,63 @@ export default function Dashboard() {
 
   const handleFalseAlarm = () => {
     setCurrentFallAlert(null);
+  };
+
+  const handleEmergencyConfirm = async () => {
+    if (!emergencyDispatchData) return;
+
+    const { hospital, destination, fallAlert } = emergencyDispatchData;
+    setFallLocation(destination);
+    setNearestHospital(hospital);
+
+    try {
+      // Find available ambulance from the hospital
+      const ambulancesRes = await apiRequest("GET", `/api/ambulances/hospital/${hospital.id}`);
+      const ambulances = await ambulancesRes.json();
+      const availableAmbulance = ambulances.find((a: any) => a.status === "available");
+
+      if (!availableAmbulance) {
+        toast({
+          title: "Error",
+          description: "No ambulances available at nearest hospital",
+          variant: "destructive",
+        });
+        setEmergencyDialogOpen(false);
+        return;
+      }
+
+      // Dispatch ambulance
+      const dispatchedRes = await apiRequest("POST", "/api/ambulances/dispatch", {
+        ambulanceId: availableAmbulance.id,
+        fallEventId: fallAlert.timestamp.toString(),
+        destination: destination,
+      });
+      const dispatched = await dispatchedRes.json();
+
+      setDispatchedAmbulance(dispatched);
+      setEmergencyDialogOpen(false);
+      setEmergencyDispatchData(null);
+
+      toast({
+        title: "Emergency Dispatched",
+        description: `Ambulance ${dispatched.vehicleNumber} dispatched from ${hospital.name}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Dispatch Failed",
+        description: error.message || "Failed to dispatch emergency services",
+        variant: "destructive",
+      });
+      setEmergencyDialogOpen(false);
+    }
+  };
+
+  const handleEmergencyCancel = () => {
+    setEmergencyDialogOpen(false);
+    setEmergencyDispatchData(null);
     toast({
-      title: "Alert Dismissed",
-      description: "Fall alert marked as false alarm",
+      title: "Emergency Dispatch Cancelled",
+      description: "The emergency dispatch has been cancelled",
     });
   };
 
@@ -249,6 +320,17 @@ export default function Dashboard() {
         </div>
         <IncidentTimeline />
       </div>
+
+      {/* Emergency Dispatch Confirmation Dialog */}
+      {emergencyDispatchData && (
+        <DashboardEmergencyDialog
+          open={emergencyDialogOpen}
+          onOpenChange={setEmergencyDialogOpen}
+          data={emergencyDispatchData}
+          onConfirm={handleEmergencyConfirm}
+          onCancel={handleEmergencyCancel}
+        />
+      )}
     </div>
   );
 }
