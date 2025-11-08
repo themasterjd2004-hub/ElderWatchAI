@@ -174,7 +174,7 @@ export default function Landing() {
             <p className="text-xl text-muted-foreground mb-8">
               Start monitoring with AI-powered fall detection and emergency response today.
             </p>
-            <Button size="lg" onClick={handleLogin} data-testid="button-cta">
+            <Button size="lg" onClick={() => setLocation("/signin")} data-testid="button-cta">
               Sign In to Dashboard
             </Button>
           </div>
