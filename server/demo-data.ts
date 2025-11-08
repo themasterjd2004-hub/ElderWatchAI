@@ -24,7 +24,7 @@ export async function seedDemoData() {
         lastName: "Kuruvilla",
       },
       {
-        email: "Shreyassmysuru@gmail.com",
+        email: "shreyassmysuru@gmail.com",
         password: "shreyas@123",
         firstName: "Shreyas",
         lastName: "S",
@@ -39,7 +39,7 @@ export async function seedDemoData() {
       if (!user) {
         const hashedPassword = await hashPassword(userData.password);
         user = await storage.createUser({
-          email: userData.email,
+          email: userData.email.toLowerCase(),
           password: hashedPassword,
           firstName: userData.firstName,
           lastName: userData.lastName,
@@ -47,6 +47,9 @@ export async function seedDemoData() {
           role: "user",
         });
         console.log(`✅ Authorized user created: ${userData.email}`);
+      } else if (user.email !== userData.email.toLowerCase()) {
+        // User exists but with wrong case - this is in-memory storage so we need to work around it
+        console.log(`⚠️  User ${userData.email} exists with email ${user.email}, case-insensitive match works`);
       }
       
       // Use first user as demo user
@@ -59,7 +62,7 @@ export async function seedDemoData() {
     if (!demoUser) {
       const hashedPassword = await hashPassword("demo123");
       demoUser = await storage.createUser({
-        email: "demo@example.com",
+        email: "demo@example.com".toLowerCase(),
         password: hashedPassword,
         firstName: "Demo",
         lastName: "User",

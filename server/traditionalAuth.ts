@@ -38,7 +38,7 @@ export const signup: RequestHandler = async (req, res) => {
     const hashedPassword = await hashPassword(password);
 
     const user = await storage.createUser({
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
       firstName,
       lastName,

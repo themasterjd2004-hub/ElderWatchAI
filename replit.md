@@ -87,15 +87,28 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication and Authorization
 
-**Current Implementation**: Demo mode with seeded credentials
-- Username/password: demo/demo123
-- Session-based authentication structure prepared
+**Current Implementation**: Gmail-based authentication with 4 authorized accounts
+- **Authorized Users** (case-insensitive email login):
+  - saakshirai719@gmail.com — saakshi@123
+  - lakshyajm3@gmail.com — lakshya@123
+  - dhruvkuruvilla@gmail.com — dhruv@123
+  - Shreyassmysuru@gmail.com — shreyas@123
+- Session-based authentication with bcrypt password hashing
+- Case-insensitive email matching (users can login with any casing)
+- Login page appears immediately when app is opened
+- All routes protected via ProtectedRoute component
 - User-to-parent relationship mapping
 
+**Technical Details**:
+- Express session middleware with PostgreSQL session store
+- Passwords stored using bcrypt with 10 salt rounds
+- Email lookup uses case-insensitive SQL comparison: `LOWER(email)`
+- Session persists across page refreshes
+
 **Future Extension Points**: 
-- Express session middleware with connect-pg-simple
 - Role-based access (family member vs. caregiver)
 - Multi-factor authentication for emergency dispatch
+- Password reset functionality
 
 ### External Dependencies
 

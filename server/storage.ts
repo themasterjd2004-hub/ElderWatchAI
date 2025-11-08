@@ -104,8 +104,9 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
+    const normalizedEmail = email.toLowerCase();
     return Array.from(this.users.values()).find(
-      (user) => user.email === email,
+      (user) => user.email?.toLowerCase() === normalizedEmail,
     );
   }
 
