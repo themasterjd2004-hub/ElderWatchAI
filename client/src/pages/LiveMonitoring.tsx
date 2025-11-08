@@ -3,7 +3,7 @@ import VitalsPanel from "@/components/VitalsPanel";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, AlertTriangle } from "lucide-react";
+import { MapPin, AlertTriangle } from "lucide-react";
 import { useFallDetection } from "@/hooks/useFallDetection";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useEffect, useState } from "react";
@@ -110,23 +110,11 @@ export default function LiveMonitoring() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold" data-testid="text-page-title">Live Monitoring</h1>
-          <p className="text-muted-foreground mt-1">
-            Real-time AI-powered safety monitoring with fall detection
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" data-testid="button-call-parent">
-            <Phone className="h-4 w-4 mr-2" />
-            Call Parent
-          </Button>
-          <Button variant="destructive" data-testid="button-emergency">
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Emergency
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold" data-testid="text-page-title">Live Monitoring</h1>
+        <p className="text-muted-foreground mt-1">
+          Real-time AI-powered safety monitoring with fall detection
+        </p>
       </div>
 
       {showAlert && currentAlert && (
