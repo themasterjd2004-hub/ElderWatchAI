@@ -54,27 +54,40 @@ export default function VitalsPanel({ vitals }: VitalsPanelProps) {
     },
   ]);
 
-  // Update vitals every minute (60000ms) with realistic variations
+  // Update vitals every 3 seconds for live monitoring feel
   useEffect(() => {
     const updateVitals = () => {
       setDynamicVitals((prev) =>
         prev.map((vital) => {
           if (vital.id === "heart") {
-            // Heart rate: 60-85 BPM (normal range with slight variations)
-            const newValue = 68 + Math.floor(Math.random() * 15);
-            const status = newValue > 80 ? "warning" : "stable";
+            // Heart rate: 68-85 BPM (normal range with realistic variations)
+            const newValue = 68 + Math.floor(Math.random() * 18);
+            const status = newValue > 82 ? "warning" : "stable";
             return { ...vital, value: newValue.toString(), status };
           }
           if (vital.id === "breathing") {
-            // Breathing: 12-20 per min (normal range)
-            const newValue = 14 + Math.floor(Math.random() * 6);
-            const status = newValue > 18 ? "warning" : "stable";
+            // Breathing: 14-20 per min (normal range)
+            const newValue = 14 + Math.floor(Math.random() * 7);
+            const status = newValue > 19 ? "warning" : "stable";
             return { ...vital, value: newValue.toString(), status };
           }
           if (vital.id === "motion") {
-            // Motion: Random between Low, Medium, High
-            const motionLevels = ["Low", "Medium", "High"];
-            const newValue = motionLevels[Math.floor(Math.random() * motionLevels.length)];
+            // Motion: Weighted random (Low: 20%, Medium: 50%, High: 30%)
+            const rand = Math.random();
+            let newValue;
+            if (rand < 0.2) {
+              newValue = "Low";
+            } else if (rand < 0.7) {
+              newValue = "Medium";
+            } else {
+              newValue = "High";
+            }
+            return { ...vital, value: newValue };
+          }
+          if (vital.id === "location") {
+            // GPS Accuracy: Mostly High, sometimes Medium
+            const accuracyLevels = ["High", "High", "High", "Medium"];
+            const newValue = accuracyLevels[Math.floor(Math.random() * accuracyLevels.length)];
             return { ...vital, value: newValue };
           }
           return vital;
@@ -85,8 +98,8 @@ export default function VitalsPanel({ vitals }: VitalsPanelProps) {
     // Update immediately on mount
     updateVitals();
 
-    // Then update every minute
-    const interval = setInterval(updateVitals, 60000);
+    // Then update every 3 seconds for live feel
+    const interval = setInterval(updateVitals, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -120,7 +133,10 @@ export default function VitalsPanel({ vitals }: VitalsPanelProps) {
               {vital.label}
             </p>
             <div className="flex items-baseline gap-1 mt-1">
-              <p className="text-2xl font-mono font-bold" data-testid={`text-vital-value-${vital.id}`}>
+              <p 
+                className="text-2xl font-mono font-bold transition-all duration-300" 
+                data-testid={`text-vital-value-${vital.id}`}
+              >
                 {vital.value}
               </p>
               {vital.unit && (

@@ -6,6 +6,13 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **Live Vitals Updates** (Nov 8, 2025): Real-time vital signs monitoring with dynamic updates
+  - Heart rate updates every 3 seconds (68-85 BPM range)
+  - Breathing rate changes dynamically (14-20 per min range)
+  - Motion level varies between Low/Medium/High with weighted probability
+  - GPS accuracy fluctuates between High and Medium
+  - Smooth transitions with 300ms animation on value changes
+  - Warning status triggers when vitals exceed safe thresholds
 - **Settings Page Editable** (Nov 8, 2025): Complete settings page with full edit functionality
   - All parent profile fields editable (name, age, address, phone, emergency contact, medical conditions)
   - Notification toggles for email, SMS, and push notifications
