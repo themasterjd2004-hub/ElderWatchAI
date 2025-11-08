@@ -10,6 +10,12 @@ import {
   type InsertAlert,
   type MonitoringSession,
   type InsertMonitoringSession,
+  type Hospital,
+  type InsertHospital,
+  type Ambulance,
+  type InsertAmbulance,
+  type VitalsLog,
+  type InsertVitalsLog,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -42,6 +48,26 @@ export interface IStorage {
   getActiveSession(parentId: string): Promise<MonitoringSession | undefined>;
   createMonitoringSession(session: InsertMonitoringSession): Promise<MonitoringSession>;
   endMonitoringSession(id: string): Promise<MonitoringSession | undefined>;
+
+  // Hospital methods
+  getHospital(id: string): Promise<Hospital | undefined>;
+  getAllHospitals(): Promise<Hospital[]>;
+  getNearestHospitals(lat: number, lng: number, limit?: number): Promise<Hospital[]>;
+  createHospital(hospital: InsertHospital): Promise<Hospital>;
+  updateHospital(id: string, updates: Partial<Hospital>): Promise<Hospital | undefined>;
+
+  // Ambulance methods
+  getAmbulance(id: string): Promise<Ambulance | undefined>;
+  getAmbulancesByHospitalId(hospitalId: string): Promise<Ambulance[]>;
+  getAmbulanceByFallEventId(fallEventId: string): Promise<Ambulance | undefined>;
+  createAmbulance(ambulance: InsertAmbulance): Promise<Ambulance>;
+  updateAmbulance(id: string, updates: Partial<Ambulance>): Promise<Ambulance | undefined>;
+  dispatchAmbulance(ambulanceId: string, fallEventId: string, destination: { lat: number; lng: number }): Promise<Ambulance | undefined>;
+
+  // Vitals methods
+  createVitalsLog(vitals: InsertVitalsLog): Promise<VitalsLog>;
+  getLatestVitals(parentId: string): Promise<VitalsLog | undefined>;
+  getVitalsByParentId(parentId: string, limit?: number): Promise<VitalsLog[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -50,6 +76,9 @@ export class MemStorage implements IStorage {
   private fallEvents: Map<string, FallEvent>;
   private alerts: Map<string, Alert>;
   private monitoringSessions: Map<string, MonitoringSession>;
+  private hospitals: Map<string, Hospital>;
+  private ambulances: Map<string, Ambulance>;
+  private vitalsLogs: Map<string, VitalsLog>;
 
   constructor() {
     this.users = new Map();
@@ -57,6 +86,9 @@ export class MemStorage implements IStorage {
     this.fallEvents = new Map();
     this.alerts = new Map();
     this.monitoringSessions = new Map();
+    this.hospitals = new Map();
+    this.ambulances = new Map();
+    this.vitalsLogs = new Map();
   }
 
   // User methods
@@ -296,6 +328,187 @@ export class MemStorage implements IStorage {
     this.monitoringSessions.set(id, updated);
     return updated;
   }
+
+  // Hospital methods
+  async getHospital(id: string): Promise<Hospital | undefined> {
+    return this.hospitals.get(id);
+  }
+
+  async getAllHospitals(): Promise<Hospital[]> {
+    return Array.from(this.hospitals.values());
+  }
+
+  // AI-based nearest hospital detection using Haversine formula
+  async getNearestHospitals(lat: number, lng: number, limit = 5): Promise<Hospital[]> {
+    const hospitals = Array.from(this.hospitals.values());
+    
+    // Calculate distance for each hospital
+    const hospitalsWithDistance = hospitals.map(hospital => {
+      const distance = this.calculateDistance(lat, lng, hospital.gpsCoordinates.lat, hospital.gpsCoordinates.lng);
+      return { ...hospital, distanceKm: distance };
+    });
+
+    // Sort by distance and return top N
+    return hospitalsWithDistance
+      .sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity))
+      .slice(0, limit);
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = this.toRad(lat2 - lat1);
+    const dLon = this.toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private toRad(degrees: number): number {
+    return degrees * (Math.PI / 180);
+  }
+
+  async createHospital(insertHospital: InsertHospital): Promise<Hospital> {
+    const id = randomUUID();
+    const hospital: Hospital = {
+      id,
+      name: insertHospital.name,
+      address: insertHospital.address,
+      phone: insertHospital.phone,
+      emergencyPhone: insertHospital.emergencyPhone ?? null,
+      gpsCoordinates: insertHospital.gpsCoordinates,
+      specializations: insertHospital.specializations ?? null,
+      availability: insertHospital.availability ?? "24/7",
+      rating: insertHospital.rating ?? null,
+      distanceKm: insertHospital.distanceKm ?? null,
+      estimatedArrivalMin: insertHospital.estimatedArrivalMin ?? null,
+      createdAt: new Date(),
+    };
+    this.hospitals.set(id, hospital);
+    return hospital;
+  }
+
+  async updateHospital(id: string, updates: Partial<Hospital>): Promise<Hospital | undefined> {
+    const hospital = this.hospitals.get(id);
+    if (!hospital) return undefined;
+
+    const updated = { ...hospital, ...updates };
+    this.hospitals.set(id, updated);
+    return updated;
+  }
+
+  // Ambulance methods
+  async getAmbulance(id: string): Promise<Ambulance | undefined> {
+    return this.ambulances.get(id);
+  }
+
+  async getAmbulancesByHospitalId(hospitalId: string): Promise<Ambulance[]> {
+    return Array.from(this.ambulances.values())
+      .filter(ambulance => ambulance.hospitalId === hospitalId);
+  }
+
+  async getAmbulanceByFallEventId(fallEventId: string): Promise<Ambulance | undefined> {
+    return Array.from(this.ambulances.values())
+      .find(ambulance => ambulance.fallEventId === fallEventId);
+  }
+
+  async createAmbulance(insertAmbulance: InsertAmbulance): Promise<Ambulance> {
+    const id = randomUUID();
+    const ambulance: Ambulance = {
+      id,
+      hospitalId: insertAmbulance.hospitalId,
+      fallEventId: insertAmbulance.fallEventId ?? null,
+      vehicleNumber: insertAmbulance.vehicleNumber,
+      driverName: insertAmbulance.driverName ?? null,
+      driverPhone: insertAmbulance.driverPhone ?? null,
+      status: insertAmbulance.status ?? "available",
+      currentLocation: insertAmbulance.currentLocation ?? null,
+      destinationLocation: insertAmbulance.destinationLocation ?? null,
+      dispatchedAt: null,
+      arrivedAt: null,
+      estimatedArrival: null,
+      speed: null,
+      distanceRemaining: null,
+      route: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.ambulances.set(id, ambulance);
+    return ambulance;
+  }
+
+  async updateAmbulance(id: string, updates: Partial<Ambulance>): Promise<Ambulance | undefined> {
+    const ambulance = this.ambulances.get(id);
+    if (!ambulance) return undefined;
+
+    const updated = { ...ambulance, ...updates, updatedAt: new Date() };
+    this.ambulances.set(id, updated);
+    return updated;
+  }
+
+  async dispatchAmbulance(ambulanceId: string, fallEventId: string, destination: { lat: number; lng: number }): Promise<Ambulance | undefined> {
+    const ambulance = this.ambulances.get(ambulanceId);
+    if (!ambulance) return undefined;
+
+    const now = new Date();
+    const estimatedArrival = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes from now
+
+    const updated: Ambulance = {
+      ...ambulance,
+      fallEventId,
+      status: "dispatched",
+      destinationLocation: destination,
+      dispatchedAt: now,
+      estimatedArrival,
+      updatedAt: now,
+    };
+
+    this.ambulances.set(ambulanceId, updated);
+    return updated;
+  }
+
+  // Vitals methods
+  async createVitalsLog(insertVitals: InsertVitalsLog): Promise<VitalsLog> {
+    const id = randomUUID();
+    const vitals: VitalsLog = {
+      id,
+      parentId: insertVitals.parentId,
+      fallEventId: insertVitals.fallEventId ?? null,
+      timestamp: new Date(),
+      heartRate: insertVitals.heartRate ?? null,
+      bloodPressureSystolic: insertVitals.bloodPressureSystolic ?? null,
+      bloodPressureDiastolic: insertVitals.bloodPressureDiastolic ?? null,
+      oxygenSaturation: insertVitals.oxygenSaturation ?? null,
+      respiratoryRate: insertVitals.respiratoryRate ?? null,
+      temperature: insertVitals.temperature ?? null,
+      glucoseLevel: insertVitals.glucoseLevel ?? null,
+      status: insertVitals.status ?? "normal",
+    };
+    this.vitalsLogs.set(id, vitals);
+    return vitals;
+  }
+
+  async getLatestVitals(parentId: string): Promise<VitalsLog | undefined> {
+    const vitals = Array.from(this.vitalsLogs.values())
+      .filter(v => v.parentId === parentId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return vitals[0];
+  }
+
+  async getVitalsByParentId(parentId: string, limit = 50): Promise<VitalsLog[]> {
+    return Array.from(this.vitalsLogs.values())
+      .filter(v => v.parentId === parentId)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./db-storage";
+
+// Use database storage for production-ready emergency response system
+export const storage = new DatabaseStorage();
+
+// MemStorage is kept for reference/testing but not used
+export const memStorage = new MemStorage();
