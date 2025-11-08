@@ -216,13 +216,30 @@ export default function LiveMonitoringFeed({
   };
 
   const handleImmediateNavigation = async (alert: FallAlert | null) => {
-    if (!alert) return;
+    if (!alert || !parentId) return;
 
     try {
       // Get destination from fall alert
       const destination = alert.gpsCoordinates || { lat: 12.9716, lng: 77.5946 };
 
-      // Find nearest hospital using Haversine formula
+      // Step 1: Create fall event in database
+      const fallEventRes = await apiRequest("POST", "/api/fall-events", {
+        parentId: parentId,
+        type: "fall",
+        timestamp: alert.timestamp,
+        confidence: alert.confidence,
+        location: alert.location || "Unknown location",
+        gpsCoordinates: destination,
+        keypointMetrics: alert.keypointMetrics || {},
+        motionWindow: alert.motionWindow || {},
+        snapshot: alert.snapshot || null,
+        audioClip: null,
+        speechTranscript: null,
+        status: "pending",
+      });
+      const fallEvent = await fallEventRes.json();
+
+      // Step 2: Find nearest hospital using Haversine formula
       const hospitalsRes = await apiRequest(
         "GET", 
         `/api/hospitals/nearest?lat=${destination.lat}&lng=${destination.lng}&limit=1`
@@ -243,9 +260,10 @@ export default function LiveMonitoringFeed({
       // Calculate ETA (hospital.distance is in km, average ambulance speed ~40 km/h)
       const etaMinutes = Math.round((hospital.distance / 40) * 60);
 
-      // Store emergency data and navigate to Dashboard
+      // Store emergency data with the created fall event ID
       const emergencyData = {
         fallAlert: alert,
+        fallEventId: fallEvent.id,
         hospital,
         etaMinutes,
         confidence: alert.confidence,

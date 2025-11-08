@@ -170,7 +170,7 @@ export default function Dashboard() {
   const handleEmergencyConfirm = async () => {
     if (!emergencyDispatchData) return;
 
-    const { hospital, destination, fallAlert } = emergencyDispatchData;
+    const { hospital, destination, fallEventId } = emergencyDispatchData;
     setFallLocation(destination);
     setNearestHospital(hospital);
 
@@ -190,10 +190,10 @@ export default function Dashboard() {
         return;
       }
 
-      // Dispatch ambulance
+      // Dispatch ambulance with the actual fall event ID from database
       const dispatchedRes = await apiRequest("POST", "/api/ambulances/dispatch", {
         ambulanceId: availableAmbulance.id,
-        fallEventId: fallAlert.timestamp.toString(),
+        fallEventId: fallEventId,
         destination: destination,
       });
       const dispatched = await dispatchedRes.json();
