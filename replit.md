@@ -27,14 +27,18 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
   - 2px borders on all cards for medical precision
   - Dark mode variants with lighter shadows for proper depth perception
 
-- **Live Audio Transcription** (Nov 9, 2025): Real-time speech-to-text during monitoring
-  - Uses Web Speech API for browser-based live transcription
-  - Small scrollable box displayed at bottom-right corner (320px wide, max 96px height)
-  - Only shows when audio is detected and microphone is enabled
-  - Continuous recognition with automatic restart
+- **Multi-Language Transcription** (Nov 9, 2025): Real-time speech-to-text with automatic language detection
+  - Automatic language detection using character script analysis (Unicode ranges)
+  - Supports 15 languages: English (US/UK), Hindi, Kannada, Tamil, Telugu, Malayalam, Marathi, Bengali, Spanish, French, German, Chinese, Japanese, Arabic
+  - Live language indicator badge shows detected language name
+  - Automatic switching when different language detected (Devanagari → Hindi, Kannada script → Kannada, etc.)
+  - Script-based detection: Devanagari (Hindi/Marathi), Kannada, Tamil, Telugu, Malayalam, Bengali, Arabic, Chinese, Japanese scripts
+  - Transcription box displays language name in blue badge (e.g., "Hindi", "Kannada", "English (US)")
+  - Seamless language switching: automatically restarts recognition with detected language
+  - Fallback to English (US) if language not supported by browser
+  - Uses Web Speech API with maxAlternatives=3 for better detection
+  - Small scrollable box at bottom-right corner with header showing "Live Transcription" + language badge
   - Keeps last 200 characters of transcript for clean display
-  - Scrollable overflow to prevent blocking camera view
-  - Control buttons (mic, eye, settings) arranged vertically on right side (top to bottom)
   - Toggle on/off with microphone button
 - **Emergency Response Details Card** (Nov 9, 2025): Comprehensive emergency information display
   - New EmergencyResponseDetails component shows hospital details, ambulance driver info, and ETA prominently

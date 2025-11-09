@@ -41,6 +41,24 @@ export default function LiveMonitoringFeed({
   const navigationTriggered = useRef(false);
   const [transcript, setTranscript] = useState<string>("");
   const recognitionRef = useRef<any>(null);
+  const [detectedLanguage, setDetectedLanguage] = useState<string>("en-US");
+  const [availableLanguages] = useState([
+    { code: "en-US", name: "English (US)" },
+    { code: "en-GB", name: "English (UK)" },
+    { code: "hi-IN", name: "Hindi" },
+    { code: "kn-IN", name: "Kannada" },
+    { code: "ta-IN", name: "Tamil" },
+    { code: "te-IN", name: "Telugu" },
+    { code: "ml-IN", name: "Malayalam" },
+    { code: "mr-IN", name: "Marathi" },
+    { code: "bn-IN", name: "Bengali" },
+    { code: "es-ES", name: "Spanish" },
+    { code: "fr-FR", name: "French" },
+    { code: "de-DE", name: "German" },
+    { code: "zh-CN", name: "Chinese (Mandarin)" },
+    { code: "ja-JP", name: "Japanese" },
+    { code: "ar-SA", name: "Arabic" },
+  ]);
 
   useEffect(() => {
     let detector: DetectorService | null = null;
@@ -165,6 +183,48 @@ export default function LiveMonitoringFeed({
     }
   };
 
+  const detectLanguageFromText = (text: string): string | null => {
+    const trimmed = text.trim();
+    
+    // Devanagari script (Hindi, Marathi)
+    if (/[\u0900-\u097F]/.test(trimmed)) return 'hi-IN';
+    // Kannada script
+    if (/[\u0C80-\u0CFF]/.test(trimmed)) return 'kn-IN';
+    // Tamil script
+    if (/[\u0B80-\u0BFF]/.test(trimmed)) return 'ta-IN';
+    // Telugu script
+    if (/[\u0C00-\u0C7F]/.test(trimmed)) return 'te-IN';
+    // Malayalam script
+    if (/[\u0D00-\u0D7F]/.test(trimmed)) return 'ml-IN';
+    // Bengali script
+    if (/[\u0980-\u09FF]/.test(trimmed)) return 'bn-IN';
+    // Arabic script
+    if (/[\u0600-\u06FF]/.test(trimmed)) return 'ar-SA';
+    // Chinese characters
+    if (/[\u4E00-\u9FFF]/.test(trimmed)) return 'zh-CN';
+    // Japanese (Hiragana/Katakana)
+    if (/[\u3040-\u309F\u30A0-\u30FF]/.test(trimmed)) return 'ja-JP';
+    
+    return null; // Keep current language
+  };
+
+  const stopAndRestartWithLanguage = (lang: string) => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      } catch (e) {
+        console.error('Error stopping recognition:', e);
+      }
+    }
+    // Restart with new language
+    setTimeout(() => {
+      if (cameraActive && audioEnabled) {
+        startSpeechRecognition();
+      }
+    }, 500);
+  };
+
   const startSpeechRecognition = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       console.warn("Speech recognition not supported in this browser");
@@ -176,14 +236,32 @@ export default function LiveMonitoringFeed({
     
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = detectedLanguage;
+    recognition.maxAlternatives = 3;
 
     recognition.onresult = (event: any) => {
       let finalTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
+        const result = event.results[i];
+        const transcript = result[0].transcript;
+        
+        // Detect language from final transcripts
+        if (result.isFinal && result.length > 0) {
+          for (let j = 0; j < Math.min(result.length, 3); j++) {
+            const alternative = result[j];
+            if (alternative.transcript.trim()) {
+              const lang = detectLanguageFromText(alternative.transcript);
+              if (lang && lang !== detectedLanguage) {
+                setDetectedLanguage(lang);
+                stopAndRestartWithLanguage(lang);
+                return;
+              }
+            }
+          }
+        }
+
+        if (result.isFinal) {
           finalTranscript += transcript + ' ';
         }
       }
@@ -200,8 +278,12 @@ export default function LiveMonitoringFeed({
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       if (event.error === 'no-speech') {
-        // Silently handle no-speech errors
-        return;
+        return; // Silently handle no-speech errors
+      }
+      if (event.error === 'language-not-supported') {
+        console.warn(`Language ${detectedLanguage} not supported, falling back to en-US`);
+        setDetectedLanguage('en-US');
+        stopAndRestartWithLanguage('en-US');
       }
     };
 
@@ -578,10 +660,18 @@ export default function LiveMonitoringFeed({
         {/* Live Transcription Display - Small Scrollable Box at Bottom */}
         {cameraActive && audioEnabled && transcript && (
           <div className="absolute bottom-4 right-4 w-80" data-testid="div-transcript">
-            <div className="bg-black/90 backdrop-blur-md px-3 py-2 rounded-md border border-white/20 max-h-24 overflow-y-auto">
-              <p className="text-white text-xs leading-relaxed">
-                {transcript}
-              </p>
+            <div className="bg-black/90 backdrop-blur-md rounded-md border border-white/20">
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10">
+                <span className="text-xs text-white/70 font-medium">Live Transcription</span>
+                <Badge variant="outline" className="bg-primary/20 text-primary-foreground border-primary/40 text-xs px-2 py-0.5">
+                  {availableLanguages.find(l => l.code === detectedLanguage)?.name || detectedLanguage}
+                </Badge>
+              </div>
+              <div className="px-3 py-2 max-h-24 overflow-y-auto">
+                <p className="text-white text-xs leading-relaxed">
+                  {transcript}
+                </p>
+              </div>
             </div>
           </div>
         )}
