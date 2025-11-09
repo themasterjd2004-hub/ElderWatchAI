@@ -534,8 +534,9 @@ export default function LiveMonitoringFeed({
           )}
         </div>
 
+        {/* Control Buttons - Top Right */}
         {cameraActive && (
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+          <div className="absolute top-4 right-4 flex gap-2">
             <Button
               size="icon"
               variant="secondary"
@@ -574,11 +575,11 @@ export default function LiveMonitoringFeed({
           </div>
         )}
 
-        {/* Live Transcription Display */}
+        {/* Live Transcription Display - Small Scrollable Box at Bottom */}
         {cameraActive && audioEnabled && transcript && (
-          <div className="absolute bottom-16 left-0 right-0 px-4" data-testid="div-transcript">
-            <div className="bg-black/80 backdrop-blur-sm px-4 py-3 rounded-lg mx-auto max-w-3xl">
-              <p className="text-white text-sm md:text-base leading-relaxed text-center">
+          <div className="absolute bottom-4 right-4 w-80" data-testid="div-transcript">
+            <div className="bg-black/90 backdrop-blur-md px-3 py-2 rounded-md border border-white/20 max-h-24 overflow-y-auto">
+              <p className="text-white text-xs leading-relaxed">
                 {transcript}
               </p>
             </div>
