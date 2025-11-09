@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const menuItems = [
   {
@@ -48,6 +49,7 @@ const menuItems = [
 export function AppSidebar() {
   const [location] = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const signOutMutation = useMutation({
     mutationFn: async () => {
@@ -66,6 +68,11 @@ export function AppSidebar() {
       });
     },
   });
+
+  // Get display name
+  const displayName = user?.firstName 
+    ? (user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName)
+    : "User Account";
 
   return (
     <Sidebar>
@@ -105,7 +112,7 @@ export function AppSidebar() {
             <User className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">User Account</p>
+            <p className="text-sm font-medium truncate" data-testid="text-username">{displayName}</p>
             <p className="text-xs text-muted-foreground truncate">Authorized</p>
           </div>
         </div>

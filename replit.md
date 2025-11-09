@@ -59,6 +59,12 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 Preferred communication style: Simple, everyday language.
 
+**Display Names**: When logged in, the sidebar now shows the user's actual name instead of "User Account":
+- Saakshi Rai (saakshirai719@gmail.com)
+- Lakshya JM (lakshyajm3@gmail.com)
+- Dhruv Kuruvilla (dhruvkuruvilla@gmail.com)
+- Shreyas S (shreyassmysuru@gmail.com)
+
 ## System Architecture
 
 ### Frontend Architecture
