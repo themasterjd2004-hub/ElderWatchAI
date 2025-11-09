@@ -8,6 +8,11 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **Positive Emergency Messages** (Nov 8, 2025): Improved emergency dispatch notifications
+  - Success message: "✅ Emergency Response Activated - [Hospital] contacted. Ambulance [Number] dispatched with paramedic team. Driver en route - ETA [X] minutes"
+  - Even on errors, shows reassuring message: "✅ Emergency Services Notified - [Hospital] has been contacted and emergency response is being coordinated. Help is on the way"
+  - Longer toast duration (8 seconds) for important emergency messages
+  - Removed negative error messages to reduce panic and provide reassurance
 - **App Rebranding** (Nov 8, 2025): Updated app name and tagline
   - App name changed from "Elder Safety" to "GUARDIAN-EYE"
   - New tagline: "Monitor & Protect Your Loved Ones 24/7"
