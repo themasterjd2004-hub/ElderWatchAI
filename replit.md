@@ -1,4 +1,6 @@
-# Elder Safety & Emergency Response System
+# GUARDIAN-EYE
+
+**Monitor & Protect Your Loved Ones 24/7**
 
 ## Overview
 
@@ -6,6 +8,11 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **App Rebranding** (Nov 8, 2025): Updated app name and tagline
+  - App name changed from "Elder Safety" to "GUARDIAN-EYE"
+  - New tagline: "Monitor & Protect Your Loved Ones 24/7"
+  - Updated across all pages: SignIn, SignUp, Landing, Sidebar, and HTML title
+  - Enhanced meta description for better SEO
 - **Live Vitals Updates** (Nov 8, 2025): Real-time vital signs monitoring with dynamic updates
   - Heart rate updates every 3 seconds (68-85 BPM range)
   - Breathing rate changes dynamically (14-20 per min range)

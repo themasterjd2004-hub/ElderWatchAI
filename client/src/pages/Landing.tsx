@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, Shield, Activity, MapPin, Clock, Bell, Smartphone } from "lucide-react";
+import { Shield, Activity, MapPin, Clock, Bell, Smartphone } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function Landing() {
@@ -12,8 +12,8 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <Heart className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">Elder Safety System</span>
+              <Shield className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold">GUARDIAN-EYE</span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setLocation("/signin")} data-testid="button-signin">
@@ -31,11 +31,11 @@ export default function Landing() {
         <section className="py-20 px-4">
           <div className="max-w-7xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6" data-testid="text-hero-title">
-              AI-Powered Elder Safety <br />& Emergency Response
+              GUARDIAN-EYE <br />Monitor & Protect Your Loved Ones 24/7
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Real-time fall detection with skeletal tracking, automatic hospital dispatch,
-              live ambulance GPS tracking, and dynamic vital signs monitoring.
+              AI-powered fall detection with skeletal tracking, automatic emergency dispatch,
+              live GPS tracking, and real-time vital signs monitoring for complete peace of mind.
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Button size="lg" onClick={() => setLocation("/signup")} data-testid="button-get-started">
@@ -86,11 +86,11 @@ export default function Landing() {
 
               <Card className="p-6">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                  <Heart className="h-6 w-6 text-primary" />
+                  <Activity className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Dynamic Vitals Monitoring</h3>
                 <p className="text-muted-foreground">
-                  Continuous tracking of heart rate, blood pressure, oxygen saturation, respiratory rate, and glucose levels.
+                  Continuous tracking of heart rate, breathing rate, motion levels, and GPS accuracy with real-time updates every 3 seconds.
                 </p>
               </Card>
 

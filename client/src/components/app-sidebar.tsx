@@ -75,8 +75,8 @@ export function AppSidebar() {
             <Shield className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="font-semibold text-sm">Elder Safety</h2>
-            <p className="text-xs text-muted-foreground">Monitor & Protect</p>
+            <h2 className="font-semibold text-sm">GUARDIAN-EYE</h2>
+            <p className="text-xs text-muted-foreground">24/7 Protection</p>
           </div>
         </div>
       </SidebarHeader>

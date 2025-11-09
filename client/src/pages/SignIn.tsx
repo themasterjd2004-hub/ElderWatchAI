@@ -45,10 +45,10 @@ export default function SignIn() {
         <div className="flex flex-col items-center mb-6">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-10 w-10 text-primary" />
-            <h1 className="text-3xl font-bold">Elder Safety</h1>
+            <h1 className="text-3xl font-bold">GUARDIAN-EYE</h1>
           </div>
           <p className="text-muted-foreground text-center">
-            AI-Powered Emergency Response System
+            Monitor & Protect Your Loved Ones 24/7
           </p>
         </div>
 
