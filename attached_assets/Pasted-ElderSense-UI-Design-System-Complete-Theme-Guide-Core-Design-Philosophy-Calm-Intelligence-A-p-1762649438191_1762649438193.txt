@@ -1,0 +1,113 @@
+ElderSense UI Design System - Complete Theme Guide
+Core Design Philosophy: "Calm Intelligence"
+A premium medical-grade interface balancing clinical precision with emotional reassurance. Designed for high-stakes emergency response requiring instant clarity and decision-making confidence.
+
+Color Palette & Semantics
+Medical Status Colors
+Stable/Success: #7ED957 (Mint Green) - Normal vitals, resolved incidents
+Warning: #F5A623 (Amber) - Attention needed, elevated vitals
+Critical: #EF4444 (Red) - Emergency, falls, dangerous conditions
+Primary: #4A90E2 (Medical Blue) - Brand, informational, neutral actions
+Neutral Hierarchy
+Background: Light gray (#F8F9FA) in light mode, dark (#1A1A1A) in dark mode
+Card Surface: Elevated white/dark with 2px borders
+Text Levels:
+Primary: High contrast for main content
+Secondary: text-muted-foreground for supporting info
+Tertiary: text-tertiary for least important data
+Typography System
+Fonts
+Headings: Poppins/Open Sans with -0.03em letter-spacing
+Body: Inter/Roboto for readability
+Medical Data: Roboto Mono (tabular monospace for all metrics, vitals, timestamps)
+Hierarchy
+Page Titles: font-heading text-3xl/4xl with tight tracking
+Section Headers: font-heading text-xl/2xl
+Card Titles: font-heading text-lg font-semibold
+Metrics: text-3xl mono-number font-bold for vitals/stats
+Body: text-base default, text-sm for secondary info
+Shadow System (Multi-Tier Depth)
+Subtle medical-grade elevation working in both light and dark modes:
+
+2xs: 0 1px 2px - Minimal depth for badges
+sm: 0 1px 3px - Default card depth
+md: 0 4px 6px -1px - Elevated interactive elements
+lg: 0 10px 15px -3px - Modals, popovers
+xl: 0 20px 25px -5px - Floating notifications
+2xl: 0 25px 50px -12px - Maximum drama for critical alerts
+All shadows have proper dark mode variants with lighter colors.
+
+Spacing & Layout
+Grid Systems
+Gap: gap-6 md:gap-8 for all grids
+Card Padding: p-5 or p-6 consistently
+Section Spacing: space-y-6 or space-y-8
+Icon Spacing: gap-3 to gap-5 between icon and text
+Borders
+All Cards: border-2 for medical precision
+Inputs/Buttons: Respect Shadcn defaults (subtle)
+Avatars: border-2 with shadow for emphasis
+Component Styling Patterns
+Cards
+className="border-2 shadow-sm premium-card-hover"
+
+2px solid border
+Subtle shadow for depth
+Interactive hover with lift + shadow increase
+Stat Cards (Dashboard)
+className="stat-card-gradient border-2 shadow-sm"
+
+Subtle gradient background
+Icon circles with status colors
+Monospace numbers for metrics
+Icon Circles
+className="icon-circle-success p-3 rounded-lg"
+
+Variants: primary, success, warning, critical
+
+10% opacity colored background
+Padding p-3 for breathing room
+Used for status indicators
+Animation System
+Entry Animations
+Fade In: animate-fade-in - Smooth opacity + transform on mount
+Stagger Fade: stagger-fade-in - Children animate sequentially (50ms delays)
+Interactive States
+Form Inputs: 200ms transitions on focus/blur
+Cards: premium-card-hover - Lift + shadow on hover
+Buttons/Badges: Built-in Shadcn elevation (no custom overrides)
+Interactive States & Elevation
+Buttons
+Use Shadcn variants: default, outline, ghost, primary
+Sizes: default (min-h-9), sm (min-h-8), lg (min-h-10), icon (h-9)
+NO custom hover states - rely on built-in hover-elevate and active-elevate-2
+Cards
+Static: Just shadow-sm
+Interactive: Add premium-card-hover for hover lift
+Badges
+Small size for status indicators
+Built-in elevation, no custom styling needed
+Utility Classes (Premium Additions)
+Class	Purpose
+.mono-number	Tabular monospace for metrics
+.text-tertiary	Lowest text hierarchy
+.icon-circle-{variant}	Status-colored icon backgrounds
+.premium-card-hover	Interactive card lift effect
+.stat-card-gradient	Subtle gradient backgrounds
+.frosted-glass	Backdrop blur for overlays
+.animate-fade-in	Smooth entry animation
+.stagger-fade-in	Sequential list animation
+Dark Mode Strategy
+All colors have explicit dark mode variants
+Shadows use lighter colors in dark mode for depth
+Borders maintain subtle contrast
+Medical status colors remain consistent (accessibility)
+Test all components in both modes
+Key Design Rules
+Consistency: All cards use border-2, all grids use gap-6/8
+No Emoji: Use Lucide icons for all visual indicators
+Monospace Metrics: All numbers/vitals use mono-number class
+Status Colors: Green=stable, Amber=warning, Red=critical
+Respect Shadcn: Never override button/badge hover states
+Medical Precision: 2px borders, formal typography, clear hierarchy
+This design system creates a sophisticated, trustworthy medical interface that feels both cutting-edge and reassuring during emergency situations.
