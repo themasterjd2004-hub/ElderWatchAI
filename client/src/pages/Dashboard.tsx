@@ -148,11 +148,27 @@ export default function Dashboard() {
       });
       const dispatched = await dispatchedRes.json();
 
-      setDispatchedAmbulance(dispatched);
+      // Initialize ambulance with tracking data
+      const calculatedEta = Math.round((hospital.distance || 5) / 40 * 60);
+      const initialDistance = hospital.distance || 5;
+      const initialSpeed = 50; // Initial speed in km/h
+      
+      const ambulanceWithTracking = {
+        ...dispatched,
+        distanceRemaining: initialDistance,
+        speed: initialSpeed,
+        status: "en_route",
+        currentLocation: {
+          lat: hospital.latitude || destination.lat + 0.01,
+          lng: hospital.longitude || destination.lng + 0.01,
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      setDispatchedAmbulance(ambulanceWithTracking);
       setCurrentFallAlert(null);
 
       // Calculate ETA from hospital distance and store it
-      const calculatedEta = Math.round((hospital.distance || 5) / 40 * 60);
       setEtaMinutes(calculatedEta);
       setDispatchTime(new Date());
       
@@ -215,13 +231,29 @@ export default function Dashboard() {
       });
       const dispatched = await dispatchedRes.json();
 
-      setDispatchedAmbulance(dispatched);
+      // Initialize ambulance with tracking data
+      const calculatedEta = emergencyDispatchData.etaMinutes || Math.round((hospital.distance || 5) / 40 * 60);
+      const initialDistance = hospital.distance || 5;
+      const initialSpeed = 50; // Initial speed in km/h
+      
+      const ambulanceWithTracking = {
+        ...dispatched,
+        distanceRemaining: initialDistance,
+        speed: initialSpeed,
+        status: "en_route",
+        currentLocation: {
+          lat: hospital.latitude || destination.lat + 0.01,
+          lng: hospital.longitude || destination.lng + 0.01,
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      setDispatchedAmbulance(ambulanceWithTracking);
       setEmergencyDialogOpen(false);
       setEmergencyDispatchData(null);
       setEmergencyCountdown(null); // Stop countdown
 
       // Calculate ETA and store it
-      const calculatedEta = emergencyDispatchData.etaMinutes || Math.round((hospital.distance || 5) / 40 * 60);
       setEtaMinutes(calculatedEta);
       setDispatchTime(new Date());
 

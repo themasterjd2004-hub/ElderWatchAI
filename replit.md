@@ -8,6 +8,12 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **Live Ambulance Tracking on Dashboard** (Nov 9, 2025): Fixed ambulance tracking display after emergency dispatch
+  - Ambulance tracker now properly initializes with GPS data, speed (50 km/h), and distance
+  - Real-time tracking shows: distance remaining, ETA, vehicle number, driver info, live GPS coordinates
+  - Progress bar updates every 5 seconds showing ambulance approaching destination
+  - Both EmergencyResponseDetails card and AmbulanceTracker card display on dashboard after dispatch
+  - Live tracking includes speed indicator and GPS coordinates with timestamp
 - **ElderSense Theme** (Nov 9, 2025): Applied "Calm Intelligence" medical-grade design system
   - Premium color palette: Medical Blue (#4A90E2), Mint Green (#7ED957), Amber (#F5A623), Critical Red (#EF4444)
   - Typography hierarchy with Poppins headings, tight letter-spacing (-0.03em)
