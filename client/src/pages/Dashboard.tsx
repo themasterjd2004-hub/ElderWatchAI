@@ -5,6 +5,7 @@ import IncidentTimeline from "@/components/IncidentTimeline";
 import AmbulanceTracker from "@/components/AmbulanceTracker";
 import DashboardEmergencyDialog from "@/components/DashboardEmergencyDialog";
 import EmergencyResponseDetails from "@/components/EmergencyResponseDetails";
+import LiveTrackingDialog from "@/components/LiveTrackingDialog";
 import { Card } from "@/components/ui/card";
 import { Activity, Shield, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const [emergencyCountdown, setEmergencyCountdown] = useState<number | null>(null);
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
   const [dispatchTime, setDispatchTime] = useState<Date | null>(null);
+  const [trackingDialogOpen, setTrackingDialogOpen] = useState(false);
   
   // Get user ID
   useEffect(() => {
@@ -172,11 +174,8 @@ export default function Dashboard() {
       setEtaMinutes(calculatedEta);
       setDispatchTime(new Date());
       
-      toast({
-        title: "✅ Emergency Response Activated",
-        description: `${hospital.name} contacted. Ambulance ${dispatched.vehicleNumber} dispatched with paramedic team. Driver en route - ETA ${calculatedEta} minutes.`,
-        duration: 8000,
-      });
+      // Open live tracking dialog instead of just toast
+      setTrackingDialogOpen(true);
     } catch (error: any) {
       // Show reassuring message even on error
       const hospitalName = nearestHospital?.name || "Nearest Hospital";
@@ -257,11 +256,8 @@ export default function Dashboard() {
       setEtaMinutes(calculatedEta);
       setDispatchTime(new Date());
 
-      toast({
-        title: "✅ Emergency Response Activated",
-        description: `${hospital.name} contacted. Ambulance ${dispatched.vehicleNumber} dispatched with paramedic team. Driver en route - ETA ${calculatedEta} minutes.`,
-        duration: 8000,
-      });
+      // Open live tracking dialog instead of just toast
+      setTrackingDialogOpen(true);
     } catch (error: any) {
       // Even on error, show a reassuring message
       setEmergencyDialogOpen(false);
@@ -424,6 +420,19 @@ export default function Dashboard() {
           onConfirm={handleEmergencyConfirm}
           onCancel={handleEmergencyCancel}
           countdown={emergencyCountdown}
+        />
+      )}
+
+      {/* Live Tracking Dialog */}
+      {dispatchedAmbulance && nearestHospital && fallLocation && etaMinutes && dispatchTime && (
+        <LiveTrackingDialog
+          open={trackingDialogOpen}
+          onOpenChange={setTrackingDialogOpen}
+          hospital={nearestHospital}
+          ambulance={dispatchedAmbulance}
+          destination={fallLocation}
+          etaMinutes={etaMinutes}
+          dispatchTime={dispatchTime}
         />
       )}
     </div>
