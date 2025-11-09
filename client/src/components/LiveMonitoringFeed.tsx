@@ -534,9 +534,9 @@ export default function LiveMonitoringFeed({
           )}
         </div>
 
-        {/* Control Buttons - Top Right */}
+        {/* Control Buttons - Vertical Stack on Right Side */}
         {cameraActive && (
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 right-4 flex flex-col gap-2">
             <Button
               size="icon"
               variant="secondary"

@@ -15,7 +15,7 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
   - Continuous recognition with automatic restart
   - Keeps last 200 characters of transcript for clean display
   - Scrollable overflow to prevent blocking camera view
-  - Control buttons (mic, eye, settings) repositioned to top-right corner
+  - Control buttons (mic, eye, settings) arranged vertically on right side (top to bottom)
   - Toggle on/off with microphone button
 - **Emergency Response Details Card** (Nov 9, 2025): Comprehensive emergency information display
   - New EmergencyResponseDetails component shows hospital details, ambulance driver info, and ETA prominently
