@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ElderSense UI Design System - "Calm Intelligence" Theme */
+/* Medical-grade premium interface for high-stakes emergency response */
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0,0,0, .10);
@@ -9,54 +12,91 @@
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
+  
+  /* Base Colors - Light Gray Background */
+  --background: 0 0% 97.3%;  /* #F8F9FA */
   --foreground: 0 0% 9%;
   --border: 0 0% 91%;
-  --card: 0 0% 98%;
+  
+  /* Card Surface - Elevated White */
+  --card: 0 0% 100%;  /* Pure white */
   --card-foreground: 0 0% 9%;
-  --card-border: 0 0% 94%;
+  --card-border: 0 0% 89%;
+  
+  /* Sidebar Colors */
   --sidebar: 0 0% 96%;
   --sidebar-foreground: 0 0% 9%;
   --sidebar-border: 0 0% 92%;
-  --sidebar-primary: 197 71% 40%;
+  --sidebar-primary: 208 79% 58%;  /* Medical Blue */
   --sidebar-primary-foreground: 0 0% 98%;
   --sidebar-accent: 0 0% 92%;
   --sidebar-accent-foreground: 0 0% 9%;
-  --sidebar-ring: 197 71% 40%;
+  --sidebar-ring: 208 79% 58%;
+  
+  /* Popover */
   --popover: 0 0% 94%;
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 89%;
-  --primary: 197 71% 40%;
+  
+  /* Medical Status Colors - ElderSense Palette */
+  --primary: 208 79% 58%;  /* #4A90E2 - Medical Blue */
   --primary-foreground: 0 0% 98%;
   --secondary: 0 0% 90%;
   --secondary-foreground: 0 0% 9%;
   --muted: 0 5% 92%;
-  --muted-foreground: 0 0% 35%;
-  --accent: 197 15% 91%;
-  --accent-foreground: 197 15% 15%;
-  --destructive: 0 72% 41%;
+  --muted-foreground: 0 0% 40%;  /* Secondary text hierarchy */
+  --accent: 208 20% 91%;
+  --accent-foreground: 208 20% 15%;
+  --destructive: 0 72% 59%;  /* #EF4444 - Critical Red */
   --destructive-foreground: 0 0% 98%;
+  
+  /* Tertiary text - lowest hierarchy */
+  --text-tertiary: 0 0% 55%;
+  
+  /* Success/Stable - Mint Green */
+  --success: 93 62% 60%;  /* #7ED957 */
+  --success-foreground: 0 0% 9%;
+  
+  /* Warning - Amber */
+  --warning: 36 91% 55%;  /* #F5A623 */
+  --warning-foreground: 0 0% 9%;
+  
+  /* Input & Ring */
   --input: 0 0% 75%;
-  --ring: 197 71% 40%;
-  --chart-1: 197 71% 35%;
-  --chart-2: 158 64% 32%;
+  --ring: 208 79% 58%;
+  
+  /* Chart Colors */
+  --chart-1: 208 79% 45%;
+  --chart-2: 93 62% 50%;
   --chart-3: 221 83% 38%;
   --chart-4: 280 65% 40%;
-  --chart-5: 25 95% 45%;
+  --chart-5: 36 91% 50%;
+  
+  /* Typography */
   --font-sans: Inter, Roboto, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Roboto Mono, monospace;
+  --font-heading: Poppins, 'Open Sans', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+  
+  /* Border Radius */
   --radius: .5rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  
+  /* Medical-Grade Shadow System - Multi-tier depth */
+  --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+  --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
+  --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
+  --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.25);
+  
+  /* Heading Letter Spacing */
+  --tracking-tight: -0.03em;
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+
+  /* Icon Circle Background Opacities */
+  --icon-bg-opacity: 0.1;
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -87,54 +127,82 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* DARK MODE */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 0 0% 7%;
+  
+  /* Base Colors - Deep Dark */
+  --background: 0 0% 10%;  /* #1A1A1A */
   --foreground: 0 0% 95%;
   --border: 0 0% 16%;
-  --card: 0 0% 9%;
+  
+  /* Card Surface - Elevated Dark */
+  --card: 0 0% 12%;
   --card-foreground: 0 0% 95%;
-  --card-border: 0 0% 12%;
+  --card-border: 0 0% 15%;
+  
+  /* Sidebar Colors */
   --sidebar: 0 0% 11%;
   --sidebar-foreground: 0 0% 95%;
   --sidebar-border: 0 0% 14%;
-  --sidebar-primary: 197 71% 45%;
+  --sidebar-primary: 208 79% 65%;  /* Lighter Medical Blue for dark mode */
   --sidebar-primary-foreground: 0 0% 98%;
   --sidebar-accent: 0 0% 14%;
   --sidebar-accent-foreground: 0 0% 95%;
-  --sidebar-ring: 197 71% 45%;
+  --sidebar-ring: 208 79% 65%;
+  
+  /* Popover */
   --popover: 0 0% 13%;
   --popover-foreground: 0 0% 95%;
   --popover-border: 0 0% 16%;
-  --primary: 197 71% 35%;
+  
+  /* Medical Status Colors - ElderSense Dark Mode */
+  --primary: 208 79% 65%;  /* Lighter Medical Blue */
   --primary-foreground: 0 0% 98%;
   --secondary: 0 0% 16%;
   --secondary-foreground: 0 0% 95%;
   --muted: 0 5% 15%;
   --muted-foreground: 0 0% 68%;
-  --accent: 197 12% 14%;
-  --accent-foreground: 197 12% 88%;
-  --destructive: 0 72% 35%;
+  --accent: 208 15% 18%;
+  --accent-foreground: 208 15% 88%;
+  --destructive: 0 72% 50%;  /* Critical Red */
   --destructive-foreground: 0 0% 98%;
+  
+  /* Tertiary text - lowest hierarchy */
+  --text-tertiary: 0 0% 50%;
+  
+  /* Success/Stable - Mint Green (maintained for accessibility) */
+  --success: 93 62% 55%;
+  --success-foreground: 0 0% 9%;
+  
+  /* Warning - Amber (maintained for accessibility) */
+  --warning: 36 91% 50%;
+  --warning-foreground: 0 0% 9%;
+  
+  /* Input & Ring */
   --input: 0 0% 30%;
-  --ring: 197 71% 45%;
-  --chart-1: 197 71% 65%;
-  --chart-2: 158 64% 68%;
+  --ring: 208 79% 65%;
+  
+  /* Chart Colors */
+  --chart-1: 208 79% 65%;
+  --chart-2: 93 62% 68%;
   --chart-3: 221 83% 72%;
   --chart-4: 280 65% 70%;
-  --chart-5: 25 95% 65%;
-  --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  --chart-5: 36 91% 65%;
+  
+  /* Dark Mode Shadow System - Lighter shadows for depth */
+  --shadow-2xs: 0 1px 2px 0 hsl(0 0% 100% / 0.03);
+  --shadow-xs: 0 1px 2px 0 hsl(0 0% 100% / 0.03);
+  --shadow-sm: 0 1px 3px 0 hsl(0 0% 100% / 0.05), 0 1px 2px -1px hsl(0 0% 100% / 0.05);
+  --shadow: 0 1px 3px 0 hsl(0 0% 100% / 0.05), 0 1px 2px -1px hsl(0 0% 100% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(0 0% 100% / 0.07), 0 2px 4px -2px hsl(0 0% 100% / 0.07);
+  --shadow-lg: 0 10px 15px -3px hsl(0 0% 100% / 0.1), 0 4px 6px -4px hsl(0 0% 100% / 0.1);
+  --shadow-xl: 0 20px 25px -5px hsl(0 0% 100% / 0.12), 0 8px 10px -6px hsl(0 0% 100% / 0.12);
+  --shadow-2xl: 0 25px 50px -12px hsl(0 0% 100% / 0.25);
 
 /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
@@ -173,27 +241,17 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Heading typography with tight letter spacing */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: var(--tracking-tight);
+  }
 }
 
 /**
- * Using the elevate system.
- * Automatic contrast adjustment.
- *
- * <element className="hover-elevate" />
- * <element className="active-elevate-2" />
- *
- * // Using the tailwind utility when a data attribute is "on"
- * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
- * // Or manually controlling the toggle state
- * <element className="toggle-elevate toggle-elevated" />
- *
- * Elevation systems have to handle many states.
- * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
- * - toggled or not
- * - focused or not (this is not handled with these utilities)
- *
- * Even without handling focused or not, this is six possible combinations that
- * need to be distinguished from eachother visually.
+ * ElderSense Premium Utilities
+ * Medical-grade design system components
  */
 @layer utilities {
 
@@ -208,6 +266,97 @@
     color: hsl(var(--muted-foreground));
     pointer-events: none;
   }
+
+  /* Tertiary text - lowest hierarchy */
+  .text-tertiary {
+    color: hsl(var(--text-tertiary));
+  }
+
+  /* Monospace numbers for medical data/metrics */
+  .mono-number {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* Icon Circle Backgrounds - Medical Status Colors */
+  .icon-circle-primary {
+    background-color: hsl(var(--primary) / var(--icon-bg-opacity));
+    color: hsl(var(--primary));
+  }
+
+  .icon-circle-success {
+    background-color: hsl(var(--success) / var(--icon-bg-opacity));
+    color: hsl(var(--success));
+  }
+
+  .icon-circle-warning {
+    background-color: hsl(var(--warning) / var(--icon-bg-opacity));
+    color: hsl(var(--warning));
+  }
+
+  .icon-circle-critical {
+    background-color: hsl(var(--destructive) / var(--icon-bg-opacity));
+    color: hsl(var(--destructive));
+  }
+
+  /* Premium Card Hover - Lift effect with enhanced shadow */
+  .premium-card-hover {
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+
+  .premium-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Stat Card Gradient - Subtle background elevation */
+  .stat-card-gradient {
+    background: linear-gradient(135deg, 
+      hsl(var(--card)) 0%, 
+      hsl(var(--muted) / 0.3) 100%
+    );
+  }
+
+  /* Frosted Glass Effect - For modals and overlays */
+  .frosted-glass {
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Entry Animation - Smooth fade in */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 300ms ease-out;
+  }
+
+  /* Stagger Fade In - Sequential list animation */
+  .stagger-fade-in > * {
+    opacity: 0;
+    animation: fadeIn 300ms ease-out forwards;
+  }
+
+  .stagger-fade-in > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-fade-in > *:nth-child(2) { animation-delay: 50ms; }
+  .stagger-fade-in > *:nth-child(3) { animation-delay: 100ms; }
+  .stagger-fade-in > *:nth-child(4) { animation-delay: 150ms; }
+  .stagger-fade-in > *:nth-child(5) { animation-delay: 200ms; }
+  .stagger-fade-in > *:nth-child(6) { animation-delay: 250ms; }
+  .stagger-fade-in > *:nth-child(7) { animation-delay: 300ms; }
+  .stagger-fade-in > *:nth-child(8) { animation-delay: 350ms; }
+  .stagger-fade-in > *:nth-child(9) { animation-delay: 400ms; }
+  .stagger-fade-in > *:nth-child(10) { animation-delay: 450ms; }
 
   /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
    * buttons/badges can remove the automatic brightness adjustment on interactions

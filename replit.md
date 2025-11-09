@@ -8,6 +8,16 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **ElderSense Theme** (Nov 9, 2025): Applied "Calm Intelligence" medical-grade design system
+  - Premium color palette: Medical Blue (#4A90E2), Mint Green (#7ED957), Amber (#F5A623), Critical Red (#EF4444)
+  - Typography hierarchy with Poppins headings, tight letter-spacing (-0.03em)
+  - Medical-grade multi-tier shadow system (6 levels: 2xs to 2xl)
+  - New utility classes: mono-number, text-tertiary, icon-circle-*, premium-card-hover, stat-card-gradient, frosted-glass
+  - Entry animations: animate-fade-in and stagger-fade-in for sequential reveals
+  - Roboto Mono for all medical data/metrics with tabular numbers
+  - 2px borders on all cards for medical precision
+  - Dark mode variants with lighter shadows for proper depth perception
+
 - **Live Audio Transcription** (Nov 9, 2025): Real-time speech-to-text during monitoring
   - Uses Web Speech API for browser-based live transcription
   - Small scrollable box displayed at bottom-right corner (320px wide, max 96px height)

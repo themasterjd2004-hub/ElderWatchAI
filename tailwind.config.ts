@@ -51,6 +51,14 @@ export default {
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
           border: "var(--destructive-border)",
         },
+        success: {
+          DEFAULT: "hsl(var(--success) / <alpha-value>)",
+          foreground: "hsl(var(--success-foreground) / <alpha-value>)",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning) / <alpha-value>)",
+          foreground: "hsl(var(--warning-foreground) / <alpha-value>)",
+        },
         ring: "hsl(var(--ring) / <alpha-value>)",
         chart: {
           "1": "hsl(var(--chart-1) / <alpha-value>)",
@@ -82,16 +90,30 @@ export default {
           offline: "rgb(156 163 175)",
         },
         medical: {
-          critical: "rgb(239 68 68)",
-          warning: "rgb(245 158 11)",
-          stable: "rgb(34 197 94)",
-          monitoring: "rgb(59 130 246)",
+          critical: "hsl(var(--destructive) / <alpha-value>)",
+          warning: "hsl(var(--warning) / <alpha-value>)",
+          stable: "hsl(var(--success) / <alpha-value>)",
+          monitoring: "hsl(var(--primary) / <alpha-value>)",
         },
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
+        heading: ["var(--font-heading)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
+      },
+      letterSpacing: {
+        tight: "var(--tracking-tight)",
+      },
+      boxShadow: {
+        '2xs': 'var(--shadow-2xs)',
+        'xs': 'var(--shadow-xs)',
+        'sm': 'var(--shadow-sm)',
+        DEFAULT: 'var(--shadow)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
+        'xl': 'var(--shadow-xl)',
+        '2xl': 'var(--shadow-2xl)',
       },
       keyframes: {
         "accordion-down": {
