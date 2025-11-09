@@ -39,6 +39,8 @@ export default function LiveMonitoringFeed({
   const [, navigate] = useLocation();
   const autoDispatchTriggered = useRef(false);
   const navigationTriggered = useRef(false);
+  const [transcript, setTranscript] = useState<string>("");
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     let detector: DetectorService | null = null;
@@ -136,6 +138,11 @@ export default function LiveMonitoringFeed({
         await videoRef.current.play();
         setCameraActive(true);
         startDetection();
+        
+        // Start speech recognition if audio is enabled
+        if (audioEnabled) {
+          startSpeechRecognition();
+        }
       }
     } catch (error) {
       console.error("Error accessing camera:", error);
@@ -153,6 +160,78 @@ export default function LiveMonitoringFeed({
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      
+      stopSpeechRecognition();
+    }
+  };
+
+  const startSpeechRecognition = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.warn("Speech recognition not supported in this browser");
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        }
+      }
+
+      if (finalTranscript.trim()) {
+        setTranscript((prev) => {
+          const updated = (prev + ' ' + finalTranscript).trim();
+          // Keep only last 200 characters for display
+          return updated.slice(-200);
+        });
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech') {
+        // Silently handle no-speech errors
+        return;
+      }
+    };
+
+    recognition.onend = () => {
+      if (cameraActive && audioEnabled) {
+        try {
+          recognition.start();
+        } catch (e) {
+          console.error('Failed to restart recognition:', e);
+        }
+      }
+    };
+
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error('Failed to start recognition:', e);
+    }
+  };
+
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.error('Error stopping recognition:', e);
+      }
+      recognitionRef.current = null;
+      setTranscript("");
     }
   };
 
@@ -461,7 +540,15 @@ export default function LiveMonitoringFeed({
               size="icon"
               variant="secondary"
               className="bg-black/50 hover:bg-black/70 text-white border-white/20"
-              onClick={() => setAudioEnabled(!audioEnabled)}
+              onClick={() => {
+                const newState = !audioEnabled;
+                setAudioEnabled(newState);
+                if (newState && cameraActive) {
+                  startSpeechRecognition();
+                } else {
+                  stopSpeechRecognition();
+                }
+              }}
               data-testid="button-toggle-audio"
             >
               {audioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
@@ -484,6 +571,17 @@ export default function LiveMonitoringFeed({
             >
               <Settings className="h-4 w-4" />
             </Button>
+          </div>
+        )}
+
+        {/* Live Transcription Display */}
+        {cameraActive && audioEnabled && transcript && (
+          <div className="absolute bottom-16 left-0 right-0 px-4" data-testid="div-transcript">
+            <div className="bg-black/80 backdrop-blur-sm px-4 py-3 rounded-lg mx-auto max-w-3xl">
+              <p className="text-white text-sm md:text-base leading-relaxed text-center">
+                {transcript}
+              </p>
+            </div>
           </div>
         )}
       </div>

@@ -8,6 +8,14 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **Live Audio Transcription** (Nov 9, 2025): Real-time speech-to-text during monitoring
+  - Uses Web Speech API for browser-based live transcription
+  - Displays live transcription at bottom of video feed in white text with dark semi-transparent background
+  - Only shows when audio is detected and microphone is enabled
+  - Continuous recognition with automatic restart
+  - Keeps last 200 characters of transcript for clean display
+  - Simple, clean implementation with backdrop blur effect
+  - Toggle on/off with microphone button
 - **Emergency Response Details Card** (Nov 9, 2025): Comprehensive emergency information display
   - New EmergencyResponseDetails component shows hospital details, ambulance driver info, and ETA prominently
   - Displays hospital name, address, phone number (clickable), and distance
