@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Shield, Mail, Lock } from "lucide-react";
 
 export default function SignIn() {
@@ -22,12 +22,18 @@ export default function SignIn() {
     try {
       await apiRequest("POST", "/api/auth/signin", { email, password });
 
+      // Invalidate auth query to refresh authentication state
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+
       toast({
         title: "Success",
         description: "Signed in successfully!",
       });
 
-      setLocation("/dashboard");
+      // Small delay to ensure auth state is refreshed
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     } catch (error: any) {
       toast({
         title: "Error",
