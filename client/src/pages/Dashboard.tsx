@@ -4,6 +4,7 @@ import AlertCard from "@/components/AlertCard";
 import IncidentTimeline from "@/components/IncidentTimeline";
 import AmbulanceTracker from "@/components/AmbulanceTracker";
 import DashboardEmergencyDialog from "@/components/DashboardEmergencyDialog";
+import EmergencyResponseDetails from "@/components/EmergencyResponseDetails";
 import { Card } from "@/components/ui/card";
 import { Activity, Shield, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -24,6 +25,8 @@ export default function Dashboard() {
   const [emergencyDialogOpen, setEmergencyDialogOpen] = useState(false);
   const [emergencyDispatchData, setEmergencyDispatchData] = useState<any>(null);
   const [emergencyCountdown, setEmergencyCountdown] = useState<number | null>(null);
+  const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
+  const [dispatchTime, setDispatchTime] = useState<Date | null>(null);
   
   // Get user ID
   useEffect(() => {
@@ -148,12 +151,14 @@ export default function Dashboard() {
       setDispatchedAmbulance(dispatched);
       setCurrentFallAlert(null);
 
-      // Calculate ETA from hospital distance
-      const etaMinutes = Math.round((nearestHospital?.distance || 5) / 40 * 60);
+      // Calculate ETA from hospital distance and store it
+      const calculatedEta = Math.round((hospital.distance || 5) / 40 * 60);
+      setEtaMinutes(calculatedEta);
+      setDispatchTime(new Date());
       
       toast({
         title: "✅ Emergency Response Activated",
-        description: `${hospital.name} contacted. Ambulance ${dispatched.vehicleNumber} dispatched with paramedic team. Driver en route - ETA ${etaMinutes} minutes.`,
+        description: `${hospital.name} contacted. Ambulance ${dispatched.vehicleNumber} dispatched with paramedic team. Driver en route - ETA ${calculatedEta} minutes.`,
         duration: 8000,
       });
     } catch (error: any) {
@@ -215,12 +220,14 @@ export default function Dashboard() {
       setEmergencyDispatchData(null);
       setEmergencyCountdown(null); // Stop countdown
 
-      // Calculate ETA
-      const etaMinutes = emergencyDispatchData.etaMinutes || Math.round((hospital.distance || 5) / 40 * 60);
+      // Calculate ETA and store it
+      const calculatedEta = emergencyDispatchData.etaMinutes || Math.round((hospital.distance || 5) / 40 * 60);
+      setEtaMinutes(calculatedEta);
+      setDispatchTime(new Date());
 
       toast({
         title: "✅ Emergency Response Activated",
-        description: `${hospital.name} contacted. Ambulance ${dispatched.vehicleNumber} dispatched with paramedic team. Driver en route - ETA ${etaMinutes} minutes.`,
+        description: `${hospital.name} contacted. Ambulance ${dispatched.vehicleNumber} dispatched with paramedic team. Driver en route - ETA ${calculatedEta} minutes.`,
         duration: 8000,
       });
     } catch (error: any) {
@@ -268,6 +275,15 @@ export default function Dashboard() {
           onSendEmergency={handleManualDispatch}
           onFalseAlarm={handleFalseAlarm}
           onAutoDispatch={handleAutoDispatch}
+        />
+      )}
+
+      {dispatchedAmbulance && nearestHospital && etaMinutes && dispatchTime && (
+        <EmergencyResponseDetails
+          hospital={nearestHospital}
+          ambulance={dispatchedAmbulance}
+          etaMinutes={etaMinutes}
+          dispatchTime={dispatchTime}
         />
       )}
 

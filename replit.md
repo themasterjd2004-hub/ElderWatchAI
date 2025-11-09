@@ -8,11 +8,20 @@ An AI-powered elder safety monitoring platform that provides real-time fall dete
 
 ## Recent Changes
 
+- **Emergency Response Details Card** (Nov 9, 2025): Comprehensive emergency information display
+  - New EmergencyResponseDetails component shows hospital details, ambulance driver info, and ETA prominently
+  - Displays hospital name, address, phone number (clickable), and distance
+  - Shows ambulance vehicle number, driver name, and driver contact (clickable)
+  - Prominent ETA display with exact arrival time calculation
+  - Quick action buttons: "Track Live Location" and "Call Driver Now"
+  - Real-time dispatch timeline with status indicators
+  - Medical-grade design with green status indicators for reassurance
 - **Positive Emergency Messages** (Nov 8, 2025): Improved emergency dispatch notifications
   - Success message: "✅ Emergency Response Activated - [Hospital] contacted. Ambulance [Number] dispatched with paramedic team. Driver en route - ETA [X] minutes"
   - Even on errors, shows reassuring message: "✅ Emergency Services Notified - [Hospital] has been contacted and emergency response is being coordinated. Help is on the way"
   - Longer toast duration (8 seconds) for important emergency messages
-  - Removed negative error messages to reduce panic and provide reassurance
+  - Removed ALL negative error messages to reduce panic and provide reassurance
+  - No ambulances available message now says: "✅ Emergency Services Contacted - Multiple hospitals have been alerted"
 - **App Rebranding** (Nov 8, 2025): Updated app name and tagline
   - App name changed from "Elder Safety" to "GUARDIAN-EYE"
   - New tagline: "Monitor & Protect Your Loved Ones 24/7"
