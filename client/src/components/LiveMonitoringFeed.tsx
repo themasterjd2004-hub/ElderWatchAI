@@ -11,6 +11,10 @@ import { useLocation } from "wouter";
 
 interface LiveMonitoringFeedProps {
   parentId?: string;
+  cameraId?: string;
+  cameraLabel?: string;
+  deviceId?: string | null;
+  isPrimary?: boolean;
   onFallDetected?: (alert: FallAlert) => void;
   onCountdownComplete?: (alert: FallAlert, hospital: any, etaMinutes: number) => void;
   mode?: "skeletal" | "normal";
@@ -18,6 +22,10 @@ interface LiveMonitoringFeedProps {
 
 export default function LiveMonitoringFeed({
   parentId,
+  cameraId,
+  cameraLabel,
+  deviceId = null,
+  isPrimary = false,
   onFallDetected,
   onCountdownComplete,
   mode = "skeletal",
@@ -146,8 +154,19 @@ export default function LiveMonitoringFeed({
     }
 
     try {
+      // Build video constraints with device selection if available
+      const videoConstraints: MediaTrackConstraints = {
+        width: 640,
+        height: 480,
+      };
+
+      // Try to use specific deviceId if provided
+      if (deviceId) {
+        videoConstraints.deviceId = { exact: deviceId };
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: videoConstraints,
         audio: false,
       });
 
@@ -163,8 +182,41 @@ export default function LiveMonitoringFeed({
         }
       }
     } catch (error) {
-      console.error("Error accessing camera:", error);
-      alert("Unable to access camera. Please grant camera permissions.");
+      console.error(`Error accessing camera${deviceId ? ` (device: ${deviceId})` : ""}:`, error);
+      
+      // Only show fallback if we actually failed to get a specific device
+      // (deviceId was explicitly set and failed)
+      if (deviceId) {
+        console.log("Specific device failed, retrying with default camera...");
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480 },
+            audio: false,
+          });
+
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play();
+            setCameraActive(true);
+            startDetection();
+            
+            if (audioEnabled) {
+              startSpeechRecognition();
+            }
+            
+            toast({
+              title: "Using Default Camera",
+              description: `Could not access ${cameraLabel || "selected camera"}. Using default camera instead.`,
+            });
+          }
+        } catch (fallbackError) {
+          console.error("Fallback camera access failed:", fallbackError);
+          alert("Unable to access camera. Please grant camera permissions.");
+        }
+      } else {
+        // No deviceId specified, this is a genuine camera access error
+        alert("Unable to access camera. Please grant camera permissions.");
+      }
     }
   };
 
@@ -383,13 +435,13 @@ export default function LiveMonitoringFeed({
       // Get destination from fall alert
       const destination = alert.gpsCoordinates || { lat: 12.9716, lng: 77.5946 };
 
-      // Step 1: Create fall event in database
+      // Step 1: Create fall event in database (include camera info)
       const fallEventRes = await apiRequest("POST", "/api/fall-events", {
         parentId: parentId,
         type: "fall",
         timestamp: alert.timestamp,
         confidence: alert.confidence,
-        location: alert.location || "Unknown location",
+        location: cameraLabel || alert.location || "Unknown location",
         gpsCoordinates: destination,
         keypointMetrics: alert.keypointMetrics || {},
         motionWindow: alert.motionWindow || {},
@@ -605,6 +657,13 @@ export default function LiveMonitoringFeed({
 
         <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
           {cameraActive && getStateBadge()}
+          {cameraLabel && (
+            <Badge variant="outline" className="bg-black/70 text-white border-white/30">
+              <Camera className="h-3 w-3 mr-1" />
+              {cameraLabel}
+              {isPrimary && <span className="ml-1 text-xs">★</span>}
+            </Badge>
+          )}
           <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
             {new Date().toLocaleTimeString()}
           </Badge>

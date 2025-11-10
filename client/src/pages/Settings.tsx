@@ -6,8 +6,12 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { User, Bell, Phone, Save, X, Plus, Upload, Camera } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { getDemoIds } from "@/lib/demoIds";
+import type { Camera as CameraType } from "@shared/schema";
 import parentPhoto from "@assets/generated_images/Elderly_parent_profile_photo_50154e6f.png";
 
 interface EmergencyContact {
@@ -26,6 +30,7 @@ interface CameraConfig {
 
 export default function Settings() {
   const { toast } = useToast();
+  const [parentId, setParentId] = useState<string | undefined>();
   
   // Parent profile state
   const [fullName, setFullName] = useState("Margaret Wilson");
@@ -48,10 +53,66 @@ export default function Settings() {
   ]);
 
   // Camera configuration state
-  const [cameras, setCameras] = useState<CameraConfig[]>([
-    { id: "1", roomName: "Bedroom", location: "Second floor, east wing", isActive: true, isPrimary: true },
-    { id: "2", roomName: "Living Room", location: "First floor, main area", isActive: true, isPrimary: false },
-  ]);
+  const [cameras, setCameras] = useState<CameraConfig[]>([]);
+
+  // Load parentId
+  useEffect(() => {
+    getDemoIds().then(({ parentId }) => {
+      setParentId(parentId);
+    });
+  }, []);
+
+  // Fetch cameras from backend
+  const { data: backendCameras, isLoading: camerasLoading } = useQuery<CameraType[]>({
+    queryKey: ["/api/cameras", parentId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cameras/${parentId}`);
+      if (!res.ok) throw new Error("Failed to fetch cameras");
+      return res.json();
+    },
+    enabled: !!parentId,
+  });
+
+  // Initialize cameras state from backend data
+  useEffect(() => {
+    if (backendCameras) {
+      setCameras(backendCameras.map((cam) => ({
+        id: cam.id,
+        roomName: cam.roomName,
+        location: cam.location || "",
+        isActive: cam.isActive,
+        isPrimary: cam.isPrimary,
+      })));
+    }
+  }, [backendCameras]);
+
+  // Camera mutations
+  const createCameraMutation = useMutation({
+    mutationFn: async (camera: Omit<CameraType, "id">) => {
+      return await apiRequest("POST", "/api/cameras", camera);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cameras", parentId] });
+    },
+  });
+
+  const updateCameraMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CameraType> }) => {
+      return await apiRequest("PATCH", `/api/cameras/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cameras", parentId] });
+    },
+  });
+
+  const deleteCameraMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("DELETE", `/api/cameras/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cameras", parentId] });
+    },
+  });
 
   const handlePhotoChange = () => {
     toast({
@@ -89,18 +150,34 @@ export default function Settings() {
     );
   };
 
-  const handleAddCamera = () => {
-    const newCamera: CameraConfig = {
-      id: Date.now().toString(),
-      roomName: "",
+  const handleAddCamera = async () => {
+    if (!parentId) return;
+    
+    const newCamera = {
+      parentId,
+      roomName: `Camera ${cameras.length + 1}`,
       location: "",
       isActive: true,
-      isPrimary: false,
+      isPrimary: cameras.length === 0,
+      deviceId: null,
     };
-    setCameras([...cameras, newCamera]);
+
+    try {
+      await createCameraMutation.mutateAsync(newCamera);
+      toast({
+        title: "Camera Added",
+        description: "New camera has been added successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add camera",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleRemoveCamera = (id: string) => {
+  const handleRemoveCamera = async (id: string) => {
     if (cameras.length <= 1) {
       toast({
         title: "Cannot Remove",
@@ -109,7 +186,20 @@ export default function Settings() {
       });
       return;
     }
-    setCameras(cameras.filter((c) => c.id !== id));
+
+    try {
+      await deleteCameraMutation.mutateAsync(id);
+      toast({
+        title: "Camera Removed",
+        description: "Camera has been removed successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove camera",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCameraChange = (id: string, field: keyof CameraConfig, value: string | boolean) => {
@@ -121,6 +211,7 @@ export default function Settings() {
   };
 
   const handleSetPrimaryCamera = (id: string) => {
+    // Enforce single primary: unset all others when setting a new primary
     setCameras(
       cameras.map((c) => ({
         ...c,
@@ -144,10 +235,17 @@ export default function Settings() {
       { id: "1", name: "John Smith", phone: "(555) 234-5678" },
       { id: "2", name: "Jane Smith", phone: "(555) 345-6789" },
     ]);
-    setCameras([
-      { id: "1", roomName: "Bedroom", location: "Second floor, east wing", isActive: true, isPrimary: true },
-      { id: "2", roomName: "Living Room", location: "First floor, main area", isActive: true, isPrimary: false },
-    ]);
+    
+    // Reset cameras to backend data
+    if (backendCameras) {
+      setCameras(backendCameras.map((cam) => ({
+        id: cam.id,
+        roomName: cam.roomName,
+        location: cam.location || "",
+        isActive: cam.isActive,
+        isPrimary: cam.isPrimary,
+      })));
+    }
     
     toast({
       title: "Changes Discarded",
@@ -155,7 +253,7 @@ export default function Settings() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate required fields
     if (!fullName.trim()) {
       toast({
@@ -199,11 +297,31 @@ export default function Settings() {
       return;
     }
 
-    // Save settings (this would normally be an API call)
-    toast({
-      title: "Settings Saved",
-      description: "Your settings have been updated successfully",
-    });
+    // Save camera updates
+    try {
+      for (const camera of cameras) {
+        await updateCameraMutation.mutateAsync({
+          id: camera.id,
+          data: {
+            roomName: camera.roomName,
+            location: camera.location || null,
+            isActive: camera.isActive,
+            isPrimary: camera.isPrimary,
+          },
+        });
+      }
+
+      toast({
+        title: "Settings Saved",
+        description: "Your settings have been updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save camera settings",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

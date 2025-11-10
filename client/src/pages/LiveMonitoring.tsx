@@ -34,6 +34,11 @@ export default function LiveMonitoring() {
   // Fetch cameras for this parent
   const { data: cameras } = useQuery<CameraType[]>({
     queryKey: ["/api/cameras", parentId],
+    queryFn: async () => {
+      const res = await fetch(`/api/cameras/${parentId}`);
+      if (!res.ok) throw new Error("Failed to fetch cameras");
+      return res.json();
+    },
     enabled: !!parentId,
   });
 
@@ -203,6 +208,10 @@ export default function LiveMonitoring() {
         <div className="lg:col-span-2 space-y-4">
           <LiveMonitoringFeed
             parentId={parentId}
+            cameraId={selectedCamera}
+            cameraLabel={cameras?.find(c => c.id === selectedCamera)?.roomName}
+            deviceId={cameras?.find(c => c.id === selectedCamera)?.deviceId}
+            isPrimary={cameras?.find(c => c.id === selectedCamera)?.isPrimary}
             onFallDetected={handleFallDetected}
             onCountdownComplete={handleCountdownComplete}
           />

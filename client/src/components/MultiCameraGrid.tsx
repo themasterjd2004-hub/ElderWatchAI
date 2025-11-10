@@ -75,6 +75,10 @@ export default function MultiCameraGrid({
             <div className="aspect-video bg-black rounded-md overflow-hidden">
               <LiveMonitoringFeed
                 parentId={parentId}
+                cameraId={camera.id}
+                cameraLabel={camera.roomName}
+                deviceId={camera.deviceId}
+                isPrimary={camera.isPrimary}
                 onFallDetected={onFallDetected}
                 onCountdownComplete={onCountdownComplete}
                 mode="skeletal"
@@ -84,10 +88,13 @@ export default function MultiCameraGrid({
         ))}
       </div>
 
-      <Card className="p-3 bg-amber/5 border-amber">
-        <p className="text-xs text-muted-foreground">
-          💡 <strong>Tip:</strong> Each camera feed runs independent fall detection. Alerts will show the camera room name where the fall was detected.
-        </p>
+      <Card className="p-3 bg-primary/5 border-primary">
+        <div className="flex items-start gap-2">
+          <Eye className="h-4 w-4 text-primary mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            <strong>Multi-Camera Monitoring:</strong> Each camera feed runs independent fall detection. Alerts will display the room name where the fall was detected.
+          </p>
+        </div>
       </Card>
     </div>
   );

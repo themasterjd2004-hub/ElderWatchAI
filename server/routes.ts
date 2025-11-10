@@ -185,6 +185,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/cameras/:id", isAuthenticatedTraditional, async (req, res) => {
     try {
       const updates = insertCameraSchema.partial().parse(req.body);
+      
+      // Enforce single primary: if setting this camera as primary, demote all others
+      if (updates.isPrimary === true) {
+        const camera = await storage.getCamera(req.params.id);
+        if (camera) {
+          // Get all cameras for this parent
+          const allCameras = await storage.getCamerasByParentId(camera.parentId);
+          // Demote all other cameras
+          for (const otherCamera of allCameras) {
+            if (otherCamera.id !== req.params.id && otherCamera.isPrimary) {
+              await storage.updateCamera(otherCamera.id, { isPrimary: false });
+            }
+          }
+        }
+      }
+      
       const camera = await storage.updateCamera(req.params.id, updates);
       if (!camera) {
         return res.status(404).json({ error: "Camera not found" });
