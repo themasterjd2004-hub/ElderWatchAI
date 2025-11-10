@@ -1,13 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Camera, Mic, MicOff, Settings, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Camera, Mic, MicOff, Settings, Eye, EyeOff, AlertTriangle, Hand } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { DetectorService, DetectorState, DetectorEvent, FallAlert } from "@/modules/fall-detection";
 import { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { SignLanguageOverlay } from "./SignLanguageOverlay";
 
 interface LiveMonitoringFeedProps {
   parentId?: string;
@@ -50,6 +51,8 @@ export default function LiveMonitoringFeed({
   const [transcript, setTranscript] = useState<string>("");
   const recognitionRef = useRef<any>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string>("en-US");
+  const [signLanguageEnabled, setSignLanguageEnabled] = useState(false);
+  const [signLanguageActive, setSignLanguageActive] = useState(false); // Tracks if sign detector is actually running
   const [availableLanguages] = useState([
     { code: "en-US", name: "English (US)" },
     { code: "en-GB", name: "English (UK)" },
@@ -698,6 +701,16 @@ export default function LiveMonitoringFeed({
             <Button
               size="icon"
               variant="secondary"
+              className={`${signLanguageEnabled ? "bg-primary text-primary-foreground border-primary" : "bg-black/50 text-white border-white/20"} hover:bg-black/70`}
+              onClick={() => setSignLanguageEnabled(!signLanguageEnabled)}
+              data-testid="button-toggle-sign-language"
+              title="Toggle Sign Language Detection"
+            >
+              <Hand className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
               className="bg-black/50 hover:bg-black/70 text-white border-white/20"
               onClick={() => setPrivacyMode(!privacyMode)}
               data-testid="button-toggle-privacy"
@@ -717,7 +730,7 @@ export default function LiveMonitoringFeed({
         )}
 
         {/* Live Transcription Display - Small Scrollable Box at Bottom */}
-        {cameraActive && audioEnabled && transcript && (
+        {cameraActive && audioEnabled && transcript && !signLanguageEnabled && (
           <div className="absolute bottom-4 right-4 w-80" data-testid="div-transcript">
             <div className="bg-black/90 backdrop-blur-md rounded-md border border-white/20">
               <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10">
@@ -734,6 +747,13 @@ export default function LiveMonitoringFeed({
             </div>
           </div>
         )}
+
+        {/* Sign Language Detection Overlay */}
+        <SignLanguageOverlay
+          videoElement={videoRef.current}
+          canvasElement={canvasRef.current}
+          isActive={cameraActive && signLanguageEnabled}
+        />
       </div>
     </Card>
   );

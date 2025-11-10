@@ -27,6 +27,7 @@ export interface DetectorStrategy {
 export class FallDetectionStrategy implements DetectorStrategy {
   private detector: DetectorService | null = null;
   private onFallDetected?: (alert: FallAlert) => void;
+  private videoCanvas: { video: HTMLVideoElement; canvas: HTMLCanvasElement } | null = null;
 
   constructor(onFallDetected?: (alert: FallAlert) => void) {
     this.onFallDetected = onFallDetected;
@@ -46,7 +47,13 @@ export class FallDetectionStrategy implements DetectorStrategy {
   async processFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): Promise<TranscriptEntry | null> {
     if (!this.detector) return null;
 
-    await this.detector.processFrame(video, canvas);
+    // Set video/canvas references if not already set or changed
+    if (!this.videoCanvas || this.videoCanvas.video !== video || this.videoCanvas.canvas !== canvas) {
+      this.detector.setVideoCanvas(video, canvas);
+      this.videoCanvas = { video, canvas };
+    }
+
+    await this.detector.processFrame(video);
     
     // Fall detection doesn't produce transcript entries
     // (handled separately via fall alerts)
@@ -55,14 +62,15 @@ export class FallDetectionStrategy implements DetectorStrategy {
 
   drawOverlay(canvas: HTMLCanvasElement, results: PoseLandmarkerResult): void {
     if (!this.detector) return;
-    // Drawing is handled internally by DetectorService
+    // Drawing is handled internally by DetectorService via setVideoCanvas
   }
 
   tearDown(): void {
     if (this.detector) {
-      this.detector.cleanup();
+      this.detector.destroy();
       this.detector = null;
     }
+    this.videoCanvas = null;
   }
 
   getStatus(): string {
