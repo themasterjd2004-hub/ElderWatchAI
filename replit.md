@@ -6,6 +6,15 @@
 
 GUARDIAN-EYE is an AI-powered elder safety monitoring platform designed to provide real-time fall detection, emergency response coordination, and family alerts. It uniquely incorporates **sign language detection** for enhanced accessibility and communication. The system prioritizes privacy by utilizing computer vision with pose estimation (skeletal tracking) to monitor individuals. Key capabilities include automated emergency dispatch integration, real-time vital monitoring, comprehensive incident management, and real-time sign language transcription with text-to-speech output. The project aims to deliver a "Calm Intelligence" medical-grade user experience, offering peace of mind to families and caregivers.
 
+## Recent Changes
+
+**November 10, 2025**: Complete emoji removal from codebase
+- Removed all emoji characters from client-side code (UI, toast notifications, console logs)
+- Removed all emoji characters from server-side code (demo data logs, WebSocket logs, API logs)
+- Updated toast notifications to use text-only severity indicators (CRITICAL ALERT, URGENT ALERT)
+- Verified zero emoji characters remain in codebase (grep verification passed)
+- All functionality preserved, no breaking changes
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
