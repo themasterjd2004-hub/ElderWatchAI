@@ -37,7 +37,7 @@ export class GestureDetector {
       });
 
       this.isInitialized = true;
-      console.log("✅ MediaPipe Gesture Detector initialized");
+      console.log("MediaPipe Gesture Detector initialized");
     } catch (error) {
       console.error("Failed to initialize gesture detector:", error);
       throw error;
@@ -157,7 +157,7 @@ export class GestureDetector {
       this.gestureRecognizer.close();
       this.gestureRecognizer = null;
       this.isInitialized = false;
-      console.log("✅ Gesture Detector closed");
+      console.log("Gesture Detector closed");
     }
   }
 }

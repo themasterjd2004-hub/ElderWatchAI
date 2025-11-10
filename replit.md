@@ -43,6 +43,23 @@ Preferred communication style: Simple, everyday language.
 
 ### AI/ML Integration
 
+*   **Multi-Signal Distress Detection System** (Nov 10, 2025): Comprehensive emergency detection beyond falls
+    *   **Voice Distress Detection**: Real-time keyword analysis in 15 languages with 100+ emergency phrases
+        *   Keywords: "help," "ouch," "pain," "I don't feel safe," medical terms in English, Hindi, Kannada, Tamil, Telugu, Malayalam, Marathi, Bengali, Spanish, French, German, Chinese, Japanese, Arabic
+        *   Severity levels: Critical (help/emergency), High (pain/unsafe), Medium (uncomfortable)
+        *   30-second cooldown per keyword prevents alert spam
+        *   Integrated into speech transcription pipeline with instant notifications
+    *   **Abnormal Movement Pattern Detection**: AI-powered activity analysis using kinematic features
+        *   **Stumbling**: Lateral center-of-mass oscillation, low stability score, partial verticality loss (HIGH priority - fall prevention)
+        *   **Freezing**: Sudden velocity collapse after active movement lasting 2+ seconds (HIGH priority - stroke/Parkinson's indicator)
+        *   **Prolonged Lying**: Duration-based escalation (5min→MEDIUM, 15min→HIGH, 30min→CRITICAL)
+        *   Shared kinematic feature extraction: velocity (overall/vertical/lateral), posture (angle/orientation), quality (smoothness/stability/symmetry)
+        *   Modular `IPatternDetector` interface for extensibility
+    *   **ActivityPatternAnalyzer**: Coordinates all detectors with unified alert pipeline
+        *   Per-frame analysis alongside fall detection
+        *   Severity-based routing: Critical→dispatch, High→notify family, Medium→log
+        *   Cooldown management prevents duplicate alerts
+        *   Console logging with confidence scores and metadata
 *   **Fall Detection Engine**: MediaPipe Tasks Vision for pose landmark detection and TensorFlow.js for supplementary analysis. Features a custom `DetectorService` analyzing body keypoints, angles, and motion patterns.
 *   **Sign Language Detection**: Real-time recognition using MediaPipe GestureRecognizer (21 landmarks per hand) with 7 built-in gestures mapped to meanings via a `SignVocabulary` module. Includes a `GestureDetector` service and `SignLanguageOverlay` component.
     *   **Current Architecture**: Sign language runs as independent opt-in feature alongside fall detection. User toggles enable/disable sign language mode via hand icon button.

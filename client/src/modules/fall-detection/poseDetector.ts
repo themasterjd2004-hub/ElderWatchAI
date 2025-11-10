@@ -33,7 +33,7 @@ export class PoseDetector {
       });
 
       this.isInitialized = true;
-      console.log("✅ MediaPipe Pose Detector initialized");
+      console.log("MediaPipe Pose Detector initialized");
     } catch (error) {
       console.error("Failed to initialize pose detector:", error);
       throw error;

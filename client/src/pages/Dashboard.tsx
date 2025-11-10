@@ -116,7 +116,7 @@ export default function Dashboard() {
       
       if (!hospitals || hospitals.length === 0) {
         toast({
-          title: "✅ Emergency Services Activated",
+          title: "Emergency Services Activated",
           description: "Emergency response system activated. Medical assistance is being coordinated through our network of healthcare providers.",
           duration: 8000,
         });
@@ -135,7 +135,7 @@ export default function Dashboard() {
         // Even if no ambulances available, show reassuring message
         const hospitalName = nearestHospital?.name || hospital.name;
         toast({
-          title: "✅ Emergency Services Contacted",
+          title: "Emergency Services Contacted",
           description: `${hospitalName} notified. Emergency response team is coordinating immediate assistance. Multiple hospitals have been alerted.`,
           duration: 8000,
         });
@@ -180,7 +180,7 @@ export default function Dashboard() {
       // Show reassuring message even on error
       const hospitalName = nearestHospital?.name || "Nearest Hospital";
       toast({
-        title: "✅ Emergency Services Notified",
+        title: "Emergency Services Notified",
         description: `${hospitalName} has been contacted and emergency response is being coordinated. Help is on the way.`,
         duration: 8000,
       });
@@ -215,7 +215,7 @@ export default function Dashboard() {
         setEmergencyCountdown(null);
         
         toast({
-          title: "✅ Emergency Services Contacted",
+          title: "Emergency Services Contacted",
           description: `${hospital.name} notified. Emergency response team is coordinating immediate assistance. Multiple hospitals have been alerted.`,
           duration: 8000,
         });
@@ -264,7 +264,7 @@ export default function Dashboard() {
       setEmergencyCountdown(null);
       
       toast({
-        title: "✅ Emergency Services Notified",
+        title: "Emergency Services Notified",
         description: `${hospital.name} has been contacted and emergency response is being coordinated. Help is on the way.`,
         duration: 8000,
       });

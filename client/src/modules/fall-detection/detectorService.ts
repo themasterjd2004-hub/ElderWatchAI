@@ -245,7 +245,7 @@ export class DetectorService {
   }
 
   private handleFalseAlarm(): void {
-    console.log("✅ False alarm - movement detected during motion check");
+    console.log("False alarm - movement detected during motion check");
     
     this.emit({
       type: "false_alarm",

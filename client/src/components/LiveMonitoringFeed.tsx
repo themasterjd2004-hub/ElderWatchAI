@@ -9,6 +9,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { SignLanguageOverlay } from "./SignLanguageOverlay";
+import { DistressDetector } from "@/modules/distress-detection/distressDetector";
+import { formatCategory, getSeverityVariant } from "@/modules/distress-detection/distressKeywords";
+import { ActivityPatternAnalyzer } from "@/modules/movement-analysis/activityPatternAnalyzer";
 
 interface LiveMonitoringFeedProps {
   parentId?: string;
@@ -53,6 +56,8 @@ export default function LiveMonitoringFeed({
   const [detectedLanguage, setDetectedLanguage] = useState<string>("en-US");
   const [signLanguageEnabled, setSignLanguageEnabled] = useState(false);
   const [signLanguageActive, setSignLanguageActive] = useState(false); // Tracks if sign detector is actually running
+  const distressDetectorRef = useRef<DistressDetector>(new DistressDetector());
+  const activityAnalyzerRef = useRef<ActivityPatternAnalyzer>(new ActivityPatternAnalyzer());
   const [availableLanguages] = useState([
     { code: "en-US", name: "English (US)" },
     { code: "en-GB", name: "English (UK)" },
@@ -126,6 +131,33 @@ export default function LiveMonitoringFeed({
             setCurrentFallAlert(null);
             autoDispatchTriggered.current = false;
           }
+        });
+
+        // Subscribe to activity pattern alerts
+        activityAnalyzerRef.current?.onActivityAlert((alert) => {
+          const { result, shouldNotifyFamily, shouldLog } = alert;
+          
+          // Show toast notification for abnormal patterns
+          const title = `${result.severity.toUpperCase()} - ${result.patternType.replace('_', ' ').toUpperCase()}`;
+          
+          toast({
+            variant: result.severity === 'critical' || result.severity === 'high' ? 'destructive' : 'default',
+            title,
+            description: result.description,
+            duration: result.severity === 'critical' ? 10000 : 8000,
+          });
+          
+          console.warn('[ACTIVITY PATTERN DETECTED]', {
+            pattern: result.patternType,
+            severity: result.severity,
+            confidence: result.confidence,
+            metadata: result.metadata,
+            shouldNotifyFamily,
+            shouldLog,
+          });
+          
+          // TODO: Implement emergency response based on severity
+          // Critical patterns might trigger auto-dispatch in the future
         });
 
         await detector.initialize();
@@ -322,6 +354,35 @@ export default function LiveMonitoringFeed({
       }
 
       if (finalTranscript.trim()) {
+        // ANALYZE FOR DISTRESS KEYWORDS
+        const distressResult = distressDetectorRef.current?.analyze(finalTranscript);
+        if (distressResult?.detected && distressResult.keyword) {
+          const severity = distressResult.keyword.severity;
+          const category = formatCategory(distressResult.keyword.category);
+          
+          toast({
+            variant: getSeverityVariant(severity),
+            title: `${severity === 'critical' ? 'CRITICAL ALERT' : severity === 'high' ? 'URGENT ALERT' : 'ATTENTION NEEDED'}`,
+            description: `Voice distress detected: "${distressResult.matchedText}" - ${category}`,
+            duration: severity === 'critical' ? 10000 : 8000,
+          });
+
+          // Log distress detection for monitoring
+          console.warn('[DISTRESS DETECTED]', {
+            text: finalTranscript,
+            keyword: distressResult.keyword.phrase,
+            severity: severity,
+            category: category,
+            language: distressResult.keyword.language,
+            timestamp: distressResult.timestamp,
+          });
+          
+          // TODO: Trigger appropriate emergency response based on severity
+          // Critical -> Auto-dispatch ambulance
+          // High -> Alert family members
+          // Medium -> Log for review
+        }
+        
         setTranscript((prev) => {
           const updated = (prev + ' ' + finalTranscript).trim();
           // Keep only last 200 characters for display
@@ -417,6 +478,12 @@ export default function LiveMonitoringFeed({
           
           // Then draw color-coded skeletal overlay on top
           detectorRef.current.drawLandmarks(ctx, results);
+          
+          // ANALYZE FOR ABNORMAL MOVEMENT PATTERNS (stumbling, freezing, etc.)
+          if (activityAnalyzerRef.current) {
+            const patterns = activityAnalyzerRef.current.analyzeFrame(results.landmarks[0]);
+            // Patterns are handled via callbacks registered in initialization
+          }
         } else if (!privacyMode) {
           // No person detected, just show video
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);

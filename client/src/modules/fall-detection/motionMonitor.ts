@@ -22,7 +22,7 @@ export class MotionMonitor {
     this.startTime = Date.now();
     this.previousLandmarks = initialLandmarks;
     this.movementSamples = [];
-    console.log("🔍 Starting 10-second motion monitoring...");
+    console.log("Starting 10-second motion monitoring...");
   }
 
   checkMotion(currentLandmarks: PoseLandmark[]): MotionCheckResult {

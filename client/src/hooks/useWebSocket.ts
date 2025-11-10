@@ -14,7 +14,7 @@ export function useWebSocket(userId: string | undefined) {
 
     // Listen for fall alerts
     const unsubscribeAlert = onFallAlert((data) => {
-      console.log("🚨 Fall alert received:", data);
+      console.log("Fall alert received:", data);
 
       // Show toast notification
       toast({
@@ -29,7 +29,7 @@ export function useWebSocket(userId: string | undefined) {
 
     // Listen for acknowledgments
     const unsubscribeAck = onFallAcknowledged((fallEvent) => {
-      console.log("✅ Fall acknowledged:", fallEvent);
+      console.log("Fall acknowledged:", fallEvent);
       queryClient.invalidateQueries({ queryKey: ["/api/fall-events", fallEvent.parentId] });
     });
 

@@ -16,11 +16,11 @@ export function initializeWebSocket(): Socket {
   });
 
   socket.on("connect", () => {
-    console.log("✅ WebSocket connected:", socket?.id);
+    console.log("WebSocket connected:", socket?.id);
   });
 
   socket.on("disconnect", () => {
-    console.log("❌ WebSocket disconnected");
+    console.log("WebSocket disconnected");
   });
 
   socket.on("connect_error", (error) => {
