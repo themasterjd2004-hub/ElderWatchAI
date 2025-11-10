@@ -578,7 +578,7 @@ export default function LiveMonitoringFeed({
           style={{ 
             display: cameraActive ? "block" : "none",
             filter: nightVisionEnabled 
-              ? "brightness(1.5) contrast(1.8) saturate(0.5) hue-rotate(90deg)" 
+              ? "brightness(2.5) contrast(2.5) saturate(0.3) hue-rotate(90deg) grayscale(0.3)" 
               : "none"
           }}
         />
