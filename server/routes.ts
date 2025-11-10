@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Socket.IO connection handling
   io.on("connection", (socket) => {
-    console.log(`✅ Client connected: ${socket.id}`);
+    console.log(`Client connected: ${socket.id}`);
 
     // Join user's room for targeted alerts
     socket.on("join", (userId: string) => {
@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     socket.on("disconnect", () => {
-      console.log(`❌ Client disconnected: ${socket.id}`);
+      console.log(`Client disconnected: ${socket.id}`);
     });
   });
 
@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fallEvent,
           parent,
         });
-        console.log(`🚨 Fall alert sent to user ${parent.userId}`);
+        console.log(`Fall alert sent to user ${parent.userId}`);
       }
 
       res.json(fallEvent);

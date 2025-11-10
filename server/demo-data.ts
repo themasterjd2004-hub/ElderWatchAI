@@ -46,10 +46,10 @@ export async function seedDemoData() {
           phone: "",
           role: "user",
         });
-        console.log(`✅ Authorized user created: ${userData.email}`);
+        console.log(`Authorized user created: ${userData.email}`);
       } else if (user.email !== userData.email.toLowerCase()) {
         // User exists but with wrong case - this is in-memory storage so we need to work around it
-        console.log(`⚠️  User ${userData.email} exists with email ${user.email}, case-insensitive match works`);
+        console.log(`User ${userData.email} exists with email ${user.email}, case-insensitive match works`);
       }
       
       // Use first user as demo user
@@ -69,7 +69,7 @@ export async function seedDemoData() {
         phone: "(555) 234-5678",
         role: "user",
       });
-      console.log("✅ Demo user created:", demoUser.id);
+      console.log("Demo user created:", demoUser.id);
     }
 
     // Check if demo parent exists
@@ -91,7 +91,7 @@ export async function seedDemoData() {
         autoDelete: true,
         hospitalApiEnabled: true,
       });
-      console.log("✅ Demo parent created:", demoParent.id);
+      console.log("Demo parent created:", demoParent.id);
     } else {
       demoParent = existingParents[0];
     }
@@ -135,7 +135,7 @@ export async function seedDemoData() {
       for (const hospital of hospitals) {
         await storage.createHospital(hospital);
       }
-      console.log("✅ Demo hospitals created");
+      console.log("Demo hospitals created");
     }
 
     // Seed ambulances (if none exist)
@@ -163,7 +163,7 @@ export async function seedDemoData() {
             currentLocation: { ...hospital.gpsCoordinates, timestamp: new Date().toISOString() },
           });
         }
-        console.log("✅ Demo ambulances created");
+        console.log("Demo ambulances created");
       }
     }
 
@@ -181,13 +181,13 @@ export async function seedDemoData() {
         glucoseLevel: 95,
         status: "normal",
       });
-      console.log("✅ Demo vitals created");
+      console.log("Demo vitals created");
     }
 
-    console.log("✅ Demo data ready");
+    console.log("Demo data ready");
     return { userId: demoUser.id, parentId: demoParent.id };
   } catch (error) {
-    console.error("❌ Failed to seed demo data:", error);
+    console.error("Failed to seed demo data:", error);
     throw error;
   }
 }
