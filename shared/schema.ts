@@ -155,6 +155,18 @@ export const vitalsLog = pgTable("vitals_log", {
   status: text("status").default("normal"), // 'normal', 'warning', 'critical'
 });
 
+// Cameras table for multi-camera support
+export const cameras = pgTable("cameras", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  parentId: varchar("parent_id").notNull().references(() => parents.id),
+  roomName: text("room_name").notNull(), // 'Bedroom', 'Living Room', 'Bathroom', etc
+  location: text("location"), // Optional description: 'Second floor, east wing'
+  deviceId: text("device_id"), // Optional hardware camera identifier
+  isActive: boolean("is_active").default(true),
+  isPrimary: boolean("is_primary").default(false), // Default camera for this parent
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -215,6 +227,11 @@ export const insertVitalsLogSchema = createInsertSchema(vitalsLog).omit({
   timestamp: true,
 });
 
+export const insertCameraSchema = createInsertSchema(cameras).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -240,3 +257,6 @@ export type InsertAmbulance = z.infer<typeof insertAmbulanceSchema>;
 
 export type VitalsLog = typeof vitalsLog.$inferSelect;
 export type InsertVitalsLog = z.infer<typeof insertVitalsLogSchema>;
+
+export type Camera = typeof cameras.$inferSelect;
+export type InsertCamera = z.infer<typeof insertCameraSchema>;
