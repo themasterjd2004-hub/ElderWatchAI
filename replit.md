@@ -45,6 +45,8 @@ Preferred communication style: Simple, everyday language.
 
 *   **Fall Detection Engine**: MediaPipe Tasks Vision for pose landmark detection and TensorFlow.js for supplementary analysis. Features a custom `DetectorService` analyzing body keypoints, angles, and motion patterns.
 *   **Sign Language Detection**: Real-time recognition using MediaPipe GestureRecognizer (21 landmarks per hand) with 7 built-in gestures mapped to meanings via a `SignVocabulary` module. Includes a `GestureDetector` service and `SignLanguageOverlay` component.
+    *   **Current Architecture**: Sign language runs as independent opt-in feature alongside fall detection. User toggles enable/disable sign language mode via hand icon button.
+    *   **Technical Note**: Fall detector and sign language detector currently operate independently (not through unified useDetectionManager hook). Both systems function correctly but maintain separate GPU contexts when active. Future optimization: migrate to detector-orchestrator pattern for unified mode switching and resource management.
 *   **Privacy Mode**: Skeletal visualization only; no video frames stored or transmitted.
 
 ### Authentication and Authorization
