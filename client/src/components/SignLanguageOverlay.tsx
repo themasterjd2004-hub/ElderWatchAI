@@ -85,10 +85,11 @@ export function SignLanguageOverlay({ videoElement, canvasElement, isActive, onD
         }
 
         // Draw hand landmarks on overlay canvas if available
+        // DON'T clear the canvas - draw ON TOP of skeleton so both are visible
         if (canvasElement && results.landmarks) {
           const ctx = canvasElement.getContext("2d");
           if (ctx) {
-            ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            // Don't clear! Just draw hand landmarks on top of existing skeleton
             detectorRef.current.drawLandmarks(ctx, results);
           }
         }
