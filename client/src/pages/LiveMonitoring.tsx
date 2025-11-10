@@ -3,18 +3,23 @@ import VitalsPanel from "@/components/VitalsPanel";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, AlertTriangle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, AlertTriangle, Camera } from "lucide-react";
 import { useFallDetection } from "@/hooks/useFallDetection";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useEffect, useState } from "react";
 import { getDemoIds } from "@/lib/demoIds";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import type { FallAlert } from "@/modules/fall-detection";
+import type { Camera as CameraType } from "@shared/schema";
 
 export default function LiveMonitoring() {
   const [userId, setUserId] = useState<string | undefined>();
   const [parentId, setParentId] = useState<string | undefined>();
+  const [selectedCamera, setSelectedCamera] = useState<string | undefined>();
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
@@ -25,6 +30,20 @@ export default function LiveMonitoring() {
       console.log("Using IDs:", { userId, parentId });
     });
   }, []);
+
+  // Fetch cameras for this parent
+  const { data: cameras } = useQuery<CameraType[]>({
+    queryKey: ["/api/cameras", parentId],
+    enabled: !!parentId,
+  });
+
+  // Auto-select primary camera or first camera when cameras load
+  useEffect(() => {
+    if (cameras && cameras.length > 0 && !selectedCamera) {
+      const primary = cameras.find((c) => c.isPrimary);
+      setSelectedCamera(primary?.id || cameras[0].id);
+    }
+  }, [cameras, selectedCamera]);
 
   const { currentAlert, handleFallDetected, acknowledgeFall, markAsFalseAlarm } = useFallDetection(parentId);
   useWebSocket(userId);
@@ -138,6 +157,44 @@ export default function LiveMonitoring() {
                 </Button>
               </div>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {cameras && cameras.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <Camera className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <Label htmlFor="camera-select" className="text-sm font-medium mb-1 block">
+                Select Camera
+              </Label>
+              <Select
+                value={selectedCamera}
+                onValueChange={setSelectedCamera}
+              >
+                <SelectTrigger className="w-full md:w-80" data-testid="select-camera">
+                  <SelectValue placeholder="Choose a camera..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {cameras.map((camera) => (
+                    <SelectItem key={camera.id} value={camera.id}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{camera.roomName}</span>
+                        {camera.location && <span className="text-xs text-muted-foreground">({camera.location})</span>}
+                        {camera.isPrimary && <Badge variant="outline" className="ml-1 text-xs">Primary</Badge>}
+                        {!camera.isActive && <Badge variant="secondary" className="ml-1 text-xs">Inactive</Badge>}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {cameras.length > 1 && (
+              <Badge variant="outline" className="text-xs">
+                {cameras.length} cameras available
+              </Badge>
+            )}
           </div>
         </Card>
       )}

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { User, Bell, Phone, Save, X, Plus, Upload } from "lucide-react";
+import { User, Bell, Phone, Save, X, Plus, Upload, Camera } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import parentPhoto from "@assets/generated_images/Elderly_parent_profile_photo_50154e6f.png";
@@ -14,6 +14,14 @@ interface EmergencyContact {
   id: string;
   name: string;
   phone: string;
+}
+
+interface CameraConfig {
+  id: string;
+  roomName: string;
+  location: string;
+  isActive: boolean;
+  isPrimary: boolean;
 }
 
 export default function Settings() {
@@ -37,6 +45,12 @@ export default function Settings() {
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([
     { id: "1", name: "John Smith", phone: "(555) 234-5678" },
     { id: "2", name: "Jane Smith", phone: "(555) 345-6789" },
+  ]);
+
+  // Camera configuration state
+  const [cameras, setCameras] = useState<CameraConfig[]>([
+    { id: "1", roomName: "Bedroom", location: "Second floor, east wing", isActive: true, isPrimary: true },
+    { id: "2", roomName: "Living Room", location: "First floor, main area", isActive: true, isPrimary: false },
   ]);
 
   const handlePhotoChange = () => {
@@ -75,6 +89,46 @@ export default function Settings() {
     );
   };
 
+  const handleAddCamera = () => {
+    const newCamera: CameraConfig = {
+      id: Date.now().toString(),
+      roomName: "",
+      location: "",
+      isActive: true,
+      isPrimary: false,
+    };
+    setCameras([...cameras, newCamera]);
+  };
+
+  const handleRemoveCamera = (id: string) => {
+    if (cameras.length <= 1) {
+      toast({
+        title: "Cannot Remove",
+        description: "You must have at least one camera configured",
+        variant: "destructive",
+      });
+      return;
+    }
+    setCameras(cameras.filter((c) => c.id !== id));
+  };
+
+  const handleCameraChange = (id: string, field: keyof CameraConfig, value: string | boolean) => {
+    setCameras(
+      cameras.map((c) =>
+        c.id === id ? { ...c, [field]: value } : c
+      )
+    );
+  };
+
+  const handleSetPrimaryCamera = (id: string) => {
+    setCameras(
+      cameras.map((c) => ({
+        ...c,
+        isPrimary: c.id === id,
+      }))
+    );
+  };
+
   const handleCancel = () => {
     // Reset all fields to original values
     setFullName("Margaret Wilson");
@@ -89,6 +143,10 @@ export default function Settings() {
     setEmergencyContacts([
       { id: "1", name: "John Smith", phone: "(555) 234-5678" },
       { id: "2", name: "Jane Smith", phone: "(555) 345-6789" },
+    ]);
+    setCameras([
+      { id: "1", roomName: "Bedroom", location: "Second floor, east wing", isActive: true, isPrimary: true },
+      { id: "2", roomName: "Living Room", location: "First floor, main area", isActive: true, isPrimary: false },
     ]);
     
     toast({
@@ -114,6 +172,28 @@ export default function Settings() {
       toast({
         title: "Validation Error",
         description: "All emergency contacts must have a name and phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if all cameras have room names
+    const invalidCameras = cameras.some((c) => !c.roomName.trim());
+    if (invalidCameras) {
+      toast({
+        title: "Validation Error",
+        description: "All cameras must have a room name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Ensure at least one camera is set as primary
+    const hasPrimary = cameras.some((c) => c.isPrimary);
+    if (!hasPrimary && cameras.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: "At least one camera must be set as primary",
         variant: "destructive",
       });
       return;
@@ -317,6 +397,84 @@ export default function Settings() {
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Another Contact
+          </Button>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Camera className="h-5 w-5" />
+          Camera Configuration
+        </h3>
+        <div className="space-y-4">
+          {cameras.map((camera, index) => (
+            <div key={camera.id} className="space-y-3 p-4 border rounded-md">
+              <div className="flex items-center justify-between">
+                <Label className="font-medium">
+                  Camera {index + 1}
+                  {camera.isPrimary && <span className="ml-2 text-xs bg-medical-stable text-white px-2 py-0.5 rounded">Primary</span>}
+                </Label>
+                {cameras.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveCamera(camera.id)}
+                    data-testid={`button-remove-camera-${camera.id}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor={`camera-room-${camera.id}`}>Room Name</Label>
+                  <Input
+                    id={`camera-room-${camera.id}`}
+                    placeholder="e.g., Bedroom, Living Room"
+                    value={camera.roomName}
+                    onChange={(e) => handleCameraChange(camera.id, "roomName", e.target.value)}
+                    data-testid={`input-camera-room-${camera.id}`}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`camera-location-${camera.id}`}>Location (Optional)</Label>
+                  <Input
+                    id={`camera-location-${camera.id}`}
+                    placeholder="e.g., Second floor, east wing"
+                    value={camera.location}
+                    onChange={(e) => handleCameraChange(camera.id, "location", e.target.value)}
+                    data-testid={`input-camera-location-${camera.id}`}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={camera.isActive}
+                    onCheckedChange={(checked) => handleCameraChange(camera.id, "isActive", checked)}
+                    data-testid={`switch-camera-active-${camera.id}`}
+                  />
+                  <Label>Active</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={camera.isPrimary}
+                    onCheckedChange={() => handleSetPrimaryCamera(camera.id)}
+                    data-testid={`switch-camera-primary-${camera.id}`}
+                  />
+                  <Label>Set as Primary</Label>
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleAddCamera}
+            data-testid="button-add-camera"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Another Camera
           </Button>
         </div>
       </Card>
