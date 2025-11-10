@@ -9,6 +9,7 @@ import {
   insertHospitalSchema,
   insertAmbulanceSchema,
   insertVitalsLogSchema,
+  insertCameraSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { seedDemoData } from "./demo-data";
@@ -153,6 +154,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error updating parent:", error);
       res.status(500).json({ error: "Failed to update parent" });
+    }
+  });
+
+  // === Camera Routes ===
+  app.post("/api/cameras", isAuthenticatedTraditional, async (req, res) => {
+    try {
+      const data = insertCameraSchema.parse(req.body);
+      const camera = await storage.createCamera(data);
+      res.json(camera);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error creating camera:", error);
+      res.status(500).json({ error: "Failed to create camera" });
+    }
+  });
+
+  app.get("/api/cameras/:parentId", isAuthenticatedTraditional, async (req, res) => {
+    try {
+      const cameras = await storage.getCamerasByParentId(req.params.parentId);
+      res.json(cameras);
+    } catch (error) {
+      console.error("Error fetching cameras:", error);
+      res.status(500).json({ error: "Failed to fetch cameras" });
+    }
+  });
+
+  app.patch("/api/cameras/:id", isAuthenticatedTraditional, async (req, res) => {
+    try {
+      const updates = insertCameraSchema.partial().parse(req.body);
+      const camera = await storage.updateCamera(req.params.id, updates);
+      if (!camera) {
+        return res.status(404).json({ error: "Camera not found" });
+      }
+      res.json(camera);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      console.error("Error updating camera:", error);
+      res.status(500).json({ error: "Failed to update camera" });
+    }
+  });
+
+  app.delete("/api/cameras/:id", isAuthenticatedTraditional, async (req, res) => {
+    try {
+      const success = await storage.deleteCamera(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Camera not found" });
+      }
+      res.json({ message: "Camera deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting camera:", error);
+      res.status(500).json({ error: "Failed to delete camera" });
     }
   });
 

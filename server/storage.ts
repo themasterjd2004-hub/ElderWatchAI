@@ -16,6 +16,8 @@ import {
   type InsertAmbulance,
   type VitalsLog,
   type InsertVitalsLog,
+  type Camera,
+  type InsertCamera,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -32,6 +34,13 @@ export interface IStorage {
   getParentsByUserId(userId: string): Promise<Parent[]>;
   createParent(parent: InsertParent): Promise<Parent>;
   updateParent(id: string, updates: Partial<InsertParent>): Promise<Parent | undefined>;
+
+  // Camera methods
+  getCamera(id: string): Promise<Camera | undefined>;
+  getCamerasByParentId(parentId: string): Promise<Camera[]>;
+  createCamera(camera: InsertCamera): Promise<Camera>;
+  updateCamera(id: string, updates: Partial<InsertCamera>): Promise<Camera | undefined>;
+  deleteCamera(id: string): Promise<boolean>;
 
   // Fall Event methods
   getFallEvent(id: string): Promise<FallEvent | undefined>;
@@ -74,6 +83,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private parents: Map<string, Parent>;
+  private cameras: Map<string, Camera>;
   private fallEvents: Map<string, FallEvent>;
   private alerts: Map<string, Alert>;
   private monitoringSessions: Map<string, MonitoringSession>;
@@ -84,6 +94,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.users = new Map();
     this.parents = new Map();
+    this.cameras = new Map();
     this.fallEvents = new Map();
     this.alerts = new Map();
     this.monitoringSessions = new Map();
@@ -202,6 +213,46 @@ export class MemStorage implements IStorage {
     const updated = { ...parent, ...updates };
     this.parents.set(id, updated);
     return updated;
+  }
+
+  // Camera methods
+  async getCamera(id: string): Promise<Camera | undefined> {
+    return this.cameras.get(id);
+  }
+
+  async getCamerasByParentId(parentId: string): Promise<Camera[]> {
+    return Array.from(this.cameras.values()).filter(
+      (camera) => camera.parentId === parentId
+    );
+  }
+
+  async createCamera(insertCamera: InsertCamera): Promise<Camera> {
+    const id = randomUUID();
+    const camera: Camera = {
+      id,
+      parentId: insertCamera.parentId,
+      roomName: insertCamera.roomName,
+      location: insertCamera.location ?? null,
+      deviceId: insertCamera.deviceId ?? null,
+      isActive: insertCamera.isActive ?? true,
+      isPrimary: insertCamera.isPrimary ?? false,
+      createdAt: new Date(),
+    };
+    this.cameras.set(id, camera);
+    return camera;
+  }
+
+  async updateCamera(id: string, updates: Partial<InsertCamera>): Promise<Camera | undefined> {
+    const camera = this.cameras.get(id);
+    if (!camera) return undefined;
+
+    const updated = { ...camera, ...updates };
+    this.cameras.set(id, updated);
+    return updated;
+  }
+
+  async deleteCamera(id: string): Promise<boolean> {
+    return this.cameras.delete(id);
   }
 
   // Fall Event methods

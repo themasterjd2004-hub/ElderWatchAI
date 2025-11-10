@@ -3,6 +3,7 @@ import { db } from "./db";
 import {
   users,
   parents,
+  cameras,
   fallEvents,
   alerts,
   monitoringSessions,
@@ -14,6 +15,8 @@ import {
   type UpsertUser,
   type Parent,
   type InsertParent,
+  type Camera,
+  type InsertCamera,
   type FallEvent,
   type InsertFallEvent,
   type Alert,
@@ -92,6 +95,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(parents.id, id))
       .returning();
     return updated;
+  }
+
+  // Camera methods
+  async getCamera(id: string): Promise<Camera | undefined> {
+    const [camera] = await db.select().from(cameras).where(eq(cameras.id, id));
+    return camera;
+  }
+
+  async getCamerasByParentId(parentId: string): Promise<Camera[]> {
+    return db.select().from(cameras).where(eq(cameras.parentId, parentId));
+  }
+
+  async createCamera(insertCamera: InsertCamera): Promise<Camera> {
+    const [camera] = await db.insert(cameras).values(insertCamera).returning();
+    return camera;
+  }
+
+  async updateCamera(id: string, updates: Partial<InsertCamera>): Promise<Camera | undefined> {
+    const [updated] = await db
+      .update(cameras)
+      .set(updates)
+      .where(eq(cameras.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCamera(id: string): Promise<boolean> {
+    const result = await db.delete(cameras).where(eq(cameras.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Fall Event methods
