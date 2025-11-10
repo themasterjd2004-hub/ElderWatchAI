@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Camera, Mic, MicOff, Settings, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Camera, Mic, MicOff, Settings, Eye, EyeOff, AlertTriangle, Moon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { DetectorService, DetectorState, DetectorEvent, FallAlert } from "@/modules/fall-detection";
 import { PoseLandmarker } from "@mediapipe/tasks-vision";
@@ -29,6 +29,7 @@ export default function LiveMonitoringFeed({
   const [cameraActive, setCameraActive] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [privacyMode, setPrivacyMode] = useState(mode === "skeletal");
+  const [nightVisionEnabled, setNightVisionEnabled] = useState(false);
   const [detectorState, setDetectorState] = useState<DetectorState>("idle");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [fallConfidence, setFallConfidence] = useState<number | null>(null);
@@ -574,7 +575,12 @@ export default function LiveMonitoringFeed({
         <canvas
           ref={canvasRef}
           className="absolute inset-0 w-full h-full"
-          style={{ display: cameraActive ? "block" : "none" }}
+          style={{ 
+            display: cameraActive ? "block" : "none",
+            filter: nightVisionEnabled 
+              ? "brightness(1.5) contrast(1.8) saturate(0.5) hue-rotate(90deg)" 
+              : "none"
+          }}
         />
 
         {!cameraActive && (
@@ -614,6 +620,12 @@ export default function LiveMonitoringFeed({
               Skeletal Mode
             </Badge>
           )}
+          {nightVisionEnabled && cameraActive && (
+            <Badge className="bg-medical-stable/90 text-white border-medical-stable">
+              <Moon className="h-3 w-3 mr-1" />
+              Night Vision Active
+            </Badge>
+          )}
         </div>
 
         {/* Control Buttons - Vertical Stack on Right Side */}
@@ -644,6 +656,17 @@ export default function LiveMonitoringFeed({
               data-testid="button-toggle-privacy"
             >
               {privacyMode ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </Button>
+            <Button
+              size="icon"
+              variant="secondary"
+              className={`bg-black/50 hover:bg-black/70 text-white border-white/20 ${
+                nightVisionEnabled ? 'ring-2 ring-medical-stable' : ''
+              }`}
+              onClick={() => setNightVisionEnabled(!nightVisionEnabled)}
+              data-testid="button-toggle-night-vision"
+            >
+              <Moon className={`h-4 w-4 ${nightVisionEnabled ? 'text-medical-stable' : ''}`} />
             </Button>
             <Button
               size="icon"
