@@ -1,0 +1,121 @@
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(shapeMode)]: false,
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kCapture)]: false
+2025-11-10 23:30:12.70
+b88882fa
+User
+},
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kType)]: 'error',
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kError)]: Error: getaddrinfo EAI_AGAIN helium
+2025-11-10 23:30:12.70
+b88882fa
+User
+at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+2025-11-10 23:30:12.70
+b88882fa
+User
+errno: -3001,
+2025-11-10 23:30:12.70
+b88882fa
+User
+code: 'EAI_AGAIN',
+2025-11-10 23:30:12.70
+b88882fa
+User
+syscall: 'getaddrinfo',
+2025-11-10 23:30:12.70
+b88882fa
+User
+hostname: 'helium'
+2025-11-10 23:30:12.70
+b88882fa
+User
+},
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kMessage)]: 'getaddrinfo EAI_AGAIN helium'
+2025-11-10 23:30:12.70
+b88882fa
+User
+}
+2025-11-10 23:30:12.70
+b88882fa
+User
+file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345
+2025-11-10 23:30:12.70
+b88882fa
+User
+o?t(o):n(u)},"cb"),s=new r(function(o,u){n=o,t=u}).catch(o=>{throw Error.captureStackTrace(
+2025-11-10 23:30:12.70
+b88882fa
+User
+^
+2025-11-10 23:30:12.70
+b88882fa
+User
+ErrorEvent {
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kTarget)]: WebSocket {
+2025-11-10 23:30:12.70
+b88882fa
+User
+_events: [Object: null prototype] {
+2025-11-10 23:30:12.70
+b88882fa
+User
+error: [Function: onError] {
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kIsForOnEventAttribute)]: false,
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kListener)]: [Function (anonymous)]
+2025-11-10 23:30:12.70
+b88882fa
+User
+},
+
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kIsForOnEventAttribute)]: false,
+2025-11-10 23:30:12.70
+b88882fa
+User
+open: [Function: onOpen] {
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kIsForOnEventAttribute)]: false,
+2025-11-10 23:30:12.70
+b88882fa
+User
+[Symbol(kListener)]: [Function: handleWebSocketOpen]
+2025-11-10 23:30:12.70
+b88882fa
+User
+}
+2025-11-10 23:30:12.70
+b88882fa
+User
+},
+2025-11-10 23:30:12.70
+b88882fa
+User
+_closeFrameReceived: false,
